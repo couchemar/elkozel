@@ -40,4 +40,38 @@ defmodule Kozel.Cards do
                  {{:diamonds, 7}, 1}
                 ]
 
+  @spec get_power(card) :: card_power
+  defp get_power(card) do
+    {_, power} = List.keyfind(@trumps_power, card, 0, {0, 0})
+    power
+  end
+
+  @spec get_cost(card) :: card_cost
+  defp get_cost({_suite, card_name}) do
+    {_, cost} = List.keyfind(@cards_cost, card_name, 0, {0, 0})
+    cost
+  end
+
+  @spec compare(card, card) :: {card, card_power, card_cost}
+  def compare(card1, card2) do
+    p1 = get_power(card1)
+    p2 = get_power(card2)
+
+    {card, power} = if p1 >= p2 do
+                      {card1, p1}
+                    else
+                      {card2, p2}
+                    end
+    if power == 0 do
+      c1 = get_cost(card1)
+      c2 = get_cost(card2)
+      if c1 > c2 do
+        {card1, 0, c1}
+      else
+        {card2, 0, c2}
+      end
+    else
+      {card, power, get_cost(card)}
+    end
+  end
 end
