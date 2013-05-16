@@ -1,9 +1,11 @@
 Code.require_file "../test_helper.exs", __FILE__
 
 defmodule Kozel.Cards.Test do
-  import Kozel.Cards, only: [compare: 2,
-                             deal: 1,
-                             produce_cards: 0]
+  import Kozel.Cards, only: [ compare: 2,
+                              deal: 1,
+                              produce_cards: 0,
+                              check_hand: 2,
+                              turn: 4 ]
   use ExUnit.Case, async: true
 
   test "compare cards" do
@@ -26,6 +28,15 @@ defmodule Kozel.Cards.Test do
     assert Enum.count(hand4) == 8
 
     assert Enum.sort(List.flatten([hand1, hand2, hand3, hand4])) == Enum.sort(pool)
+  end
+
+  test "turn not existing card" do
+    assert check_hand({:spades, :q}, []) == {:error, "Move with not exists card"}
+    assert check_hand({:spades, :q}, [{:spades, :j}]) == {:error, "Move with not exists card"}
+  end
+
+  test "" do
+    
   end
 
 end

@@ -84,13 +84,14 @@ defmodule Kozel.Cards do
   end
 
   def deal(pool) do
+    hands_count = 4
     poll_len = Enum.count(pool)
-    if rem(poll_len, 4) != 0 do
+    if rem(poll_len, hands_count) != 0 do
       raise "Could not split #{pool} to 4 parts"
     end
 
     shuffled_pool = shuffle(pool)
-    deck_len = div(poll_len, 4)
+    deck_len = div(poll_len, hands_count)
     {hand1, rest} = Enum.split shuffled_pool, deck_len
     {hand2, rest} = Enum.split rest, deck_len
     {hand3, hand4} = Enum.split rest, deck_len
@@ -99,6 +100,18 @@ defmodule Kozel.Cards do
 
   def produce_cards() do
     lc s inlist @suits, n inlist @names, do: {s, n}
+  end
+
+  def check_hand(card, hand) do
+    if List.member?(hand, card) do
+      :ok
+    else
+      {:error, "Move with not exists card"}
+    end
+  end
+
+  def turn(card, hand, player, table) do
+    
   end
 
 end
