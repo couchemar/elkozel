@@ -7,6 +7,9 @@ defmodule Kozel.Cards do
   @type card_cost :: 0 | 2..4 | 10 | 11
   @type card_power :: 0..14
 
+  @suits [ :clubs, :spades, :hearts, :diamonds ]
+  @names [:a, :k, :q, :j, 10, 9, 8, 7 ]
+
   @suit_symbols [ clubs: "♣",
                   spades: "♠",
                   hearts: "♥",
@@ -74,4 +77,28 @@ defmodule Kozel.Cards do
       {card, power, get_cost(card)}
     end
   end
+
+  defp shuffle(pool) do
+    shuffled_pool = Enum.sort lc c inlist pool, do: {:random.uniform, c}
+    lc {_, c} inlist shuffled_pool, do: c
+  end
+
+  def deal(pool) do
+    poll_len = Enum.count(pool)
+    if rem(poll_len, 4) != 0 do
+      raise "Could not split #{pool} to 4 parts"
+    end
+
+    shuffled_pool = shuffle(pool)
+    deck_len = div(poll_len, 4)
+    {hand1, rest} = Enum.split shuffled_pool, deck_len
+    {hand2, rest} = Enum.split rest, deck_len
+    {hand3, hand4} = Enum.split rest, deck_len
+    {hand1, hand2, hand3, hand4}
+  end
+
+  def produce_cards() do
+    lc s inlist @suits, n inlist @names, do: {s, n}
+  end
+
 end
