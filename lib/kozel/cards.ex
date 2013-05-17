@@ -110,8 +110,38 @@ defmodule Kozel.Cards do
     end
   end
 
+  defp split_cards(hand) do
+    Enum.partition hand, fn(card) -> get_power(card) == 0 end
+  end
+
+  def available_turns(hand, []) do
+    { cards, trumps } = split_cards(hand)
+    if Enum.empty? cards do
+      trumps
+    else
+      cards
+    end
+  end
+  def available_turns(hand, table) do
+    { cards, trumps } = split_cards(hand)
+    {_, start_card} = List.last(table)
+    if get_power(start_card) > 0 do
+      trumps
+    else
+      {suit, _} = start_card
+      suit_cards = Enum.filter cards, fn({s, _}) -> s == suit end
+      if Enum.empty? suit_cards do
+        hand
+      else
+        suit_cards
+      end
+    end
+  end
+
   def turn(card, hand, player, table) do
-    
+    hand2 = List.delete hand, card
+    table2 = [ { player, card } | table]
+    {hand2, table2}
   end
 
 end

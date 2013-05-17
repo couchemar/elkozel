@@ -5,6 +5,7 @@ defmodule Kozel.Cards.Test do
                               deal: 1,
                               produce_cards: 0,
                               check_hand: 2,
+                              available_turns: 2,
                               turn: 4 ]
   use ExUnit.Case, async: true
 
@@ -30,13 +31,47 @@ defmodule Kozel.Cards.Test do
     assert Enum.sort(List.flatten([hand1, hand2, hand3, hand4])) == Enum.sort(pool)
   end
 
-  test "turn not existing card" do
+  test "check card existance" do
     assert check_hand({:spades, :q}, []) == {:error, "Move with not exists card"}
     assert check_hand({:spades, :q}, [{:spades, :j}]) == {:error, "Move with not exists card"}
+
+    assert check_hand({:spades, :q}, [{:spades, :q}]) == :ok
   end
 
-  test "" do
-    
+  test "available turns" do
+    # Empty table
+    assert available_turns([{:spades, 8},
+                            {:diamonds, 7},
+                            {:clubs, :j},
+                            {:hearts, :a}], []) == [{:spades, 8},
+                                                    {:hearts, :a}]
+    assert available_turns([{:diamonds, 7},
+                            {:clubs, :j},
+                            {:hearts, :q}], []) == [{:diamonds, 7},
+                                                    {:clubs, :j},
+                                                    {:hearts, :q}]
+
+    # With table
+    assert available_turns([{:spades, 8},
+                            {:diamonds, 7},
+                            {:clubs, :j},
+                            {:hearts, :a}], [{0, {:spades, :a}}]) == [{:spades, 8}]
+    assert available_turns([{:diamonds, 7},
+                            {:clubs, :j},
+                            {:hearts, :a}], [{0, {:spades, :a}}]) == [{:diamonds, 7},
+                                                                      {:clubs, :j},
+                                                                      {:hearts, :a}]
+    assert available_turns([{:diamonds, 7},
+                            {:clubs, :j},
+                            {:hearts, :a}], [{0, {:spades, :q}}]) == [{:diamonds, 7},
+                                                                      {:clubs, :j}]
+  end
+
+  test "turn" do
+    assert turn({:spades, :q},
+                [{:spades, :q}, {:spades, :j}],
+                0, []) == {[{:spades, :j}], [{0, {:spades, :q}}]}
+
   end
 
 end
