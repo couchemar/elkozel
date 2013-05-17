@@ -8,18 +8,26 @@ defmodule Kozel.Table.Server do
     :gen_server.start_link(__MODULE__, [], [])
   end
 
-  defrecord TableState, round: :waiting, decs: []
+  defrecord TableState, round: :waiting, decs: [], players: nil
 
   def init([]) do
     {h1, h2, h3, h4} = deal(produce_cards)
     {:ok, TableState.new(decs: [h1, h2, h3, h4])}
   end
 
-  def handle_call(:get_cards, _from,
+  def handle_call(:get_cards, from,
                   TableState[round: :waiting,
-                             decs: decs]=state) when length(decs) > 0 do
+                             decs: decs,
+                             players: players]=state) when length(decs) > 0 do
     [d1|new_decs] = decs
-    {:reply, d1, state.decs(new_decs)}
+    new_state = state.decs(new_decs)
+    if players == nil do
+      players = HashDict.new [{1, from}]
+    else
+      players = HashDict.put(players, HashDict.size(players) + 1, from)
+    end
+    new_state = new_state.players(players)
+    {:reply, d1, new_state}
   end
 
   def handle_call(_msg, _from, state) do
