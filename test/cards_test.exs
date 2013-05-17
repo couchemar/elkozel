@@ -6,7 +6,8 @@ defmodule Kozel.Cards.Test do
                               produce_cards: 0,
                               check_hand: 2,
                               available_turns: 2,
-                              turn: 4 ]
+                              turn: 4,
+                              count: 1 ]
   use ExUnit.Case, async: true
 
   test "compare cards" do
@@ -72,6 +73,18 @@ defmodule Kozel.Cards.Test do
                 [{:spades, :q}, {:spades, :j}],
                 0, []) == {[{:spades, :j}], [{0, {:spades, :q}}]}
 
+  end
+
+  test "count points" do
+    assert count([ {0, {:spades, :a}},
+                   {1, {:spades, :q}},
+                   {2, {:diamonds, 10}},
+                   {3, {:spades, 10}} ]) == {1, 11 + 3 + 10 + 10}
+
+    assert count([ {0, {:spades, 8}},
+                   {1, {:spades, :k}},
+                   {2, {:hearts, :a}},
+                   {3, {:spades, 10}} ]) == {3, 10 + 4 + 11}
   end
 
 end

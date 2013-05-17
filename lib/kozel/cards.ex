@@ -144,4 +144,46 @@ defmodule Kozel.Cards do
     {hand2, table2}
   end
 
+  defp count_cards(table) do
+    Enum.reduce table, 0, fn({_pid, c}, acc) -> get_cost(c) + acc end
+  end
+
+  defp compare_turns({_pid1, c1} = t1, {_pid2, c2} = t2) do
+    case compare(c1, c2) do
+      {^c1, _, _} ->
+        t1
+      {^c2, _, _} ->
+        t2
+    end
+  end
+
+  defp max_trump(table) do
+    Enum.reduce table, Enum.at!(table, 0), fn(c, acc) -> compare_turns(c, acc) end
+  end
+
+  def max_card(table) do
+    {_, {suit, _}} = List.last(table)
+    Enum.reduce(table,
+                Enum.at!(table, 0),
+                fn({_, {s, _}}=c, acc) ->
+                    if s == suit do
+                      compare_turns(c, acc)
+                    else
+                      acc
+                    end
+                end)
+  end
+
+  def count(table) do
+    {_, trumps} = Enum.partition table, fn({_pid, card}) -> get_power(card) == 0 end
+
+    {leader, _} = if !Enum.empty? trumps do
+                    max_trump(trumps)
+                  else
+                    max_card(table)
+                  end
+    {leader, count_cards(table)}
+  end
+
+
 end

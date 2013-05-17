@@ -9,7 +9,8 @@ defmodule Elkozel.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    []
+    [ registered: [:kozel_table_sup],
+      mod: {Elkozel, []} ]
   end
 
   # Returns the list of dependencies in the format:
