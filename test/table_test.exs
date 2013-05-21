@@ -3,7 +3,6 @@ Code.require_file "../test_helper.exs", __FILE__
 defmodule Kozel.Table.Test do
   use ExUnit.Case, async: true
 
-  import Kozel.Table.Server
   import Kozel.Cards, only: [ available_turns: 2 ]
 
   defp receive_turn() do
@@ -28,7 +27,6 @@ defmodule Kozel.Table.Test do
     {:ok, token2} = :gen_server.call(server_pid, :join)
     {:ok, token3} = :gen_server.call(server_pid, :join)
     {:ok, token4} = :gen_server.call(server_pid, :join)
-
 
     hand1 = :gen_server.call(server_pid, {:get_cards, token1})
     hand2 = :gen_server.call(server_pid, {:get_cards, token2})
@@ -72,10 +70,10 @@ defmodule Kozel.Table.Test do
 
     {player, hand, table} = receive_turn()
 
-    assert List.member?(players, player) == true
+    assert Enum.member?(players, player) == true
     List.delete(players, player)
 
-    {token, chand} = HashDict.get!(players_data, player)
+    {token, chand} = HashDict.fetch!(players_data, player)
     assert chand == hand
     assert Enum.count(hand) == 8
     assert Enum.count(table) == 0
@@ -89,10 +87,10 @@ defmodule Kozel.Table.Test do
 
     {player, hand, table} = receive_turn()
 
-    assert List.member?(players, player) == true
+    assert Enum.member?(players, player) == true
     List.delete(players, player)
 
-    {token, chand} = HashDict.get!(players_data, player)
+    {token, chand} = HashDict.fetch!(players_data, player)
     assert chand == hand
     assert Enum.count(hand) == 8
     assert Enum.count(table) == 1

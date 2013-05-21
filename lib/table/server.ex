@@ -102,12 +102,12 @@ defmodule Kozel.Table.Server do
       {:error, error} ->
         {:reply, {:error, error}, state}
       :ok ->
-        if hand != HashDict.get!(hands, token) do
+        if hand != HashDict.fetch!(hands, token) do
           {:reply, {:error, "Not your hand"}, state}
         end
 
-        if List.member?(available_turns(hand, table), card) do
-          id = HashDict.get! ids, token
+        if Enum.member?(available_turns(hand, table), card) do
+          id = HashDict.fetch! ids, token
           {new_hand, new_table} = turn(card, hand, id, table)
 
           new_state = state.update_next_move(get_next_move &1)
@@ -133,10 +133,10 @@ defmodule Kozel.Table.Server do
                                 players_by_token: players,
                                 next_move: next_move,
                                 table: table]) do
-    next_player_token = HashDict.get!(tokens, next_move)
+    next_player_token = HashDict.fetch!(tokens, next_move)
 
-    pid = HashDict.get!(players, next_player_token)
-    hand = HashDict.get!(hands, next_player_token)
+    pid = HashDict.fetch!(players, next_player_token)
+    hand = HashDict.fetch!(hands, next_player_token)
 
     :gen_server.reply(pid, {:you_turn, hand, table})
   end

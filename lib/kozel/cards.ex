@@ -103,7 +103,7 @@ defmodule Kozel.Cards do
   end
 
   def check_hand(card, hand) do
-    if List.member?(hand, card) do
+    if Enum.member?(hand, card) do
       :ok
     else
       {:error, "Move with not exists card"}
@@ -158,13 +158,13 @@ defmodule Kozel.Cards do
   end
 
   defp max_trump(table) do
-    Enum.reduce table, Enum.at!(table, 0), fn(c, acc) -> compare_turns(c, acc) end
+    Enum.reduce table, Enum.fetch!(table, 0), fn(c, acc) -> compare_turns(c, acc) end
   end
 
   def max_card(table) do
     {_, {suit, _}} = List.last(table)
     Enum.reduce(table,
-                Enum.at!(table, 0),
+                Enum.fetch!(table, 0),
                 fn({_, {s, _}}=c, acc) ->
                     if s == suit do
                       compare_turns(c, acc)
