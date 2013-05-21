@@ -1,11 +1,12 @@
 defmodule Kozel.Table.Server do
+  import GenX.GenServer
   use GenServer.Behaviour
 
   import Kozel.Cards, only: [ produce_cards: 0,
                               deal: 1,
                               check_hand: 2,
                               available_turns: 2,
-                              turn: 4 ]
+                              process_turn: 4 ]
 
   def start_link() do
     :gen_server.start_link(__MODULE__, [], [])
@@ -27,10 +28,9 @@ defmodule Kozel.Table.Server do
     {:ok, TableState.new(decs: [h1, h2, h3, h4])}
   end
 
-  def handle_call(:join, _from,
-                  TableState[round: :waiting_joins,
-                             ids_by_token: ids,
-                             tokens_by_id: tokens]=state) do
+  defcall join, state: TableState[round: :waiting_joins,
+                                  ids_by_token: ids,
+                                  tokens_by_id: tokens]=state do
     token = :os.timestamp
 
     if ids == nil do
@@ -55,9 +55,8 @@ defmodule Kozel.Table.Server do
     {:reply, {:ok, token}, new_state}
   end
 
-  def handle_call({:get_cards, token}, _from,
-                  TableState[decs: decs,
-                             hands_by_token: hands]=state) when length(decs) > 0 do
+  defcall get_cards(token), state: TableState[decs: decs,
+                                              hands_by_token: hands]=state do
     [d|new_decs] = decs
     if hands == nil do
       hands = HashDict.new [{token, d}]
@@ -68,36 +67,28 @@ defmodule Kozel.Table.Server do
     {:reply, d, new_state.hands_by_token(hands)}
   end
 
-  def handle_call({:ready, token}, from,
-                  TableState[ready: ready,
-                             players_by_token: players]=state) when length(ready) < 3 do
-    if players == nil do
-      players = HashDict.new [{token, from}]
-    else
-      players = HashDict.put players, token, from
-    end
-    new_state = state.ready([token|ready])
-    new_state = new_state.players_by_token(players)
-    {:noreply, new_state}
-  end
 
-  def handle_call({:ready, token}, from,
-                  TableState[ready: ready,
-                             players_by_token: players]=state) when length(ready) == 3 do
+  defcall ready(token), from: from,
+                        state: TableState[ready: ready,
+                                          players_by_token: players]=state do
     if players == nil do
       players = HashDict.new [{token, from}]
     else
       players = HashDict.put players, token, from
     end
     new_state = state.players_by_token(players)
-    send_you_turn(new_state)
-    {:noreply, new_state.ready([])}
+
+    if Enum.count(ready) < 3 do
+      new_state = new_state.ready([token|ready])
+    else
+      send_you_turn(new_state)
+    end
+    {:noreply, new_state}
   end
 
-  def handle_call({:turn, token, card, hand}, _from,
-                  TableState[hands_by_token: hands,
-                             ids_by_token: ids,
-                             table: table]=state) do
+  defcall turn(token, card, hand), state: TableState[hands_by_token: hands,
+                                                     ids_by_token: ids,
+                                                     table: table]=state do
     case check_hand(card, hand) do
       {:error, error} ->
         {:reply, {:error, error}, state}
@@ -108,7 +99,7 @@ defmodule Kozel.Table.Server do
 
         if Enum.member?(available_turns(hand, table), card) do
           id = HashDict.fetch! ids, token
-          {new_hand, new_table} = turn(card, hand, id, table)
+          {new_hand, new_table} = process_turn(card, hand, id, table)
 
           new_state = state.update_next_move(get_next_move &1)
           new_state = new_state.hands_by_token(HashDict.put(hands, token, new_hand))

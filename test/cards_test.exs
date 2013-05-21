@@ -6,7 +6,7 @@ defmodule Kozel.Cards.Test do
                               produce_cards: 0,
                               check_hand: 2,
                               available_turns: 2,
-                              turn: 4,
+                              process_turn: 4,
                               count: 1 ]
   use ExUnit.Case, async: true
 
@@ -69,7 +69,7 @@ defmodule Kozel.Cards.Test do
   end
 
   test "turn" do
-    assert turn({:spades, :q},
+    assert process_turn({:spades, :q},
                 [{:spades, :q}, {:spades, :j}],
                 0, []) == {[{:spades, :j}], [{0, {:spades, :q}}]}
 

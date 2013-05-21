@@ -3,6 +3,7 @@ Code.require_file "../test_helper.exs", __FILE__
 defmodule Kozel.Table.Test do
   use ExUnit.Case, async: true
 
+  import Kozel.Table.Server
   import Kozel.Cards, only: [ available_turns: 2 ]
 
   defp receive_turn() do
@@ -23,15 +24,15 @@ defmodule Kozel.Table.Test do
   test "game", meta do
     server_pid = meta[:pid]
 
-    {:ok, token1} = :gen_server.call(server_pid, :join)
-    {:ok, token2} = :gen_server.call(server_pid, :join)
-    {:ok, token3} = :gen_server.call(server_pid, :join)
-    {:ok, token4} = :gen_server.call(server_pid, :join)
+    {:ok, token1} = join(server_pid)
+    {:ok, token2} = join(server_pid)
+    {:ok, token3} = join(server_pid)
+    {:ok, token4} = join(server_pid)
 
-    hand1 = :gen_server.call(server_pid, {:get_cards, token1})
-    hand2 = :gen_server.call(server_pid, {:get_cards, token2})
-    hand3 = :gen_server.call(server_pid, {:get_cards, token3})
-    hand4 = :gen_server.call(server_pid, {:get_cards, token4})
+    hand1 = get_cards(server_pid, token1)
+    hand2 = get_cards(server_pid, token2)
+    hand3 = get_cards(server_pid, token3)
+    hand4 = get_cards(server_pid, token4)
 
     assert Enum.count(hand1) == 8
     assert Enum.count(hand2) == 8
@@ -48,23 +49,19 @@ defmodule Kozel.Table.Test do
                                  {:player4, {token4, hand4}}]
 
     Process.spawn(fn() ->
-                      {:you_turn, hand, table} = :gen_server.call(server_pid,
-                                                                  {:ready, token1})
+                      {:you_turn, hand, table} = ready(server_pid, token1)
                       self_pid <- {:player1, hand, table}
                   end)
     Process.spawn(fn() ->
-                      {:you_turn, hand, table} = :gen_server.call(server_pid,
-                                                                  {:ready, token2})
+                      {:you_turn, hand, table} = ready(server_pid, token2)
                       self_pid <- {:player2, hand, table}
                   end)
     Process.spawn(fn() ->
-                      {:you_turn, hand, table} = :gen_server.call(server_pid,
-                                                                  {:ready, token3})
+                      {:you_turn, hand, table} = ready(server_pid, token3)
                       self_pid <- {:player3, hand, table}
                   end)
     Process.spawn(fn() ->
-                      {:you_turn, hand, table} = :gen_server.call(server_pid,
-                                                                  {:ready, token4})
+                      {:you_turn, hand, table} = ready(server_pid, token4)
                       self_pid <- {:player4, hand, table}
                   end)
 
