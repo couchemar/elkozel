@@ -12,7 +12,7 @@ defmodule Kozel.Table.Server do
     :gen_server.start_link(__MODULE__, [], [])
   end
 
-  defrecord TableState, round: :waiting_joins,
+  defrecord TableState, round: 0,
                         decs: [],
                         players_by_token: nil,
                         ids_by_token: nil,
@@ -28,8 +28,7 @@ defmodule Kozel.Table.Server do
     {:ok, TableState.new(decs: [h1, h2, h3, h4])}
   end
 
-  defcall join, state: TableState[round: :waiting_joins,
-                                  ids_by_token: ids,
+  defcall join, state: TableState[ids_by_token: ids,
                                   tokens_by_id: tokens]=state do
     token = :os.timestamp
 
@@ -52,7 +51,7 @@ defmodule Kozel.Table.Server do
     if id == 4 do
       new_state = new_state.next_move(:random.uniform(4))
     end
-    {:reply, {:ok, token}, new_state}
+    {:reply, token, new_state}
   end
 
   defcall get_cards(token), state: TableState[decs: decs,
@@ -67,7 +66,6 @@ defmodule Kozel.Table.Server do
     {:reply, d, new_state.hands_by_token(hands)}
   end
 
-
   defcall ready(token), from: from,
                         state: TableState[ready: ready,
                                           players_by_token: players]=state do
@@ -77,16 +75,16 @@ defmodule Kozel.Table.Server do
       players = HashDict.put players, token, from
     end
     new_state = state.players_by_token(players)
-
-    if Enum.count(ready) < 3 do
-      new_state = new_state.ready([token|ready])
-    else
-      send_you_turn(new_state)
+    new_state = new_state.ready([token|ready])
+    if Enum.count(ready) == 3 do
+      new_state = new_state.update_round(fn(x) -> x+1 end)
+      ready_reply(new_state)
     end
     {:noreply, new_state}
   end
 
-  defcall turn(token, card, hand), state: TableState[hands_by_token: hands,
+  defcall turn(token, card, hand), from: from,
+                                   state: TableState[hands_by_token: hands,
                                                      ids_by_token: ids,
                                                      table: table]=state do
     case check_hand(card, hand) do
@@ -104,8 +102,12 @@ defmodule Kozel.Table.Server do
           new_state = state.update_next_move(get_next_move &1)
           new_state = new_state.hands_by_token(HashDict.put(hands, token, new_hand))
           new_state = new_state.table(new_table)
-          send_you_turn(new_state)
-          {:reply, {:ok, {new_hand, new_table}}, new_state}
+          new_state = new_state.update_round(fn(x) -> x+1 end)
+          notify_table(new_state, from)
+          if Enum.count(new_table) == 4 do
+            notify_next_turn(new_state)
+          end
+          {:reply, {new_hand, new_table}, new_state}
         else
           {:reply, {:error, "Unexpected move"}, state}
         end
@@ -113,23 +115,58 @@ defmodule Kozel.Table.Server do
   end
 
   def handle_call(_msg, _from, state) do
-    IO.inspect(state)
     {:reply, {:error, "dont know what you mean"}, state}
   end
 
   # Private
 
-  defp send_you_turn(TableState[tokens_by_id: tokens,
-                                hands_by_token: hands,
-                                players_by_token: players,
-                                next_move: next_move,
-                                table: table]) do
+  defp ready_reply(TableState[round: round,
+                              ready: ready,
+                              tokens_by_id: tokens,
+                              hands_by_token: hands,
+                              players_by_token: players,
+                              next_move: next_move,
+                              table: table]) do
     next_player_token = HashDict.fetch!(tokens, next_move)
 
     pid = HashDict.fetch!(players, next_player_token)
     hand = HashDict.fetch!(hands, next_player_token)
 
-    :gen_server.reply(pid, {:you_turn, hand, table})
+    available_turns = available_turns(hand, table)
+    :gen_server.reply(pid, {:start_round, round, hand, table, available_turns})
+    lc token inlist List.delete(ready, next_player_token) do
+          pid = HashDict.fetch!(players, token)
+          :gen_server.reply(pid, {:start_round, round, {:player, next_move}})
+    end
+  end
+
+  defp notify_table(TableState[players_by_token: players,
+                               table: table]=state, exclude) do
+    lc {pid, _} inlist HashDict.values(players), pid != exclude do
+      :gen_server.cast(pid, {:new_table, table})
+    end
+
+  end
+  defp notify_next_turn(TableState[round: round,
+                                   ready: ready,
+                                   tokens_by_id: tokens,
+                                   hands_by_token: hands,
+                                   players_by_token: players,
+                                   next_move: next_move,
+                                   table: table]) do
+
+    next_player_token = HashDict.fetch!(tokens, next_move)
+
+    next_pid = HashDict.fetch!(players, next_player_token)
+    hand = HashDict.fetch!(hands, next_player_token)
+
+    available_turns = available_turns(hand, table)
+    :gen_server.cast(next_pid, {:start_round, round, hand, table, available_turns})
+
+    lc {pid, _} inlist HashDict.values(players), pid != next_pid do
+      :gen_server.cast(pid, {:start_round, round, {:player, next_move}})
+    end
+
   end
 
   defp get_next_move(next_move) when next_move == 4 do

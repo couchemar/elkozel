@@ -1,38 +1,128 @@
 Code.require_file "../test_helper.exs", __FILE__
 
+defmodule Kozel.Table.Test.Client do
+    import GenX.GenServer
+    use GenServer.Behaviour
+
+    alias Kozel.Table.Server, as: TS
+
+    defrecord ClientState, table_pid: nil,
+                           cast_receiver_pid: nil,
+                           token: nil,
+                           hand: []
+
+    def start_link(table_pid, cast_receiver_pid) do
+      :gen_server.start_link(__MODULE__, [table_pid, cast_receiver_pid], [])
+    end
+
+    def init([table_pid, cast_receiver_pid]) do
+      {:ok, ClientState.new(table_pid: table_pid,
+                            cast_receiver_pid: cast_receiver_pid)}
+    end
+
+    defcall join, state: ClientState[table_pid: table_pid]=state do
+      token = TS.join(table_pid)
+      {:reply, token, state.token(token)}
+    end
+
+    defcall get_cards, state: ClientState[table_pid: table_pid,
+                                          token: token]=state do
+      cards = TS.get_cards(table_pid, token)
+      {:reply, cards, state.hand(cards)}
+    end
+
+    defcall ready, state: ClientState[table_pid: table_pid,
+                                      token: token]=state do
+      result = TS.ready(table_pid, token)
+      case result do
+        {:start_round, _round, hand, _table, _turns} ->
+          state = state.hand(hand)
+        _ ->
+         :ok
+      end
+      {:reply, result, state}
+    end
+
+    defcall turn(card), state: ClientState[table_pid: table_pid,
+                                           token: token,
+                                           hand: hand]=state do
+      {:reply, TS.turn(table_pid, token, card, hand), state}
+    end
+
+    def handle_cast({:new_table, table},
+                    ClientState[cast_receiver_pid: receiver]=state) do
+      receiver <- {:new_table, table}
+      {:noreply, state}
+    end
+end
+
 defmodule Kozel.Table.Test do
   use ExUnit.Case, async: true
 
-  import Kozel.Table.Server
-  import Kozel.Cards, only: [ available_turns: 2 ]
+  alias Kozel.Table.Test.Client, as: TC
 
   defp receive_turn() do
     receive do
-      {player, hand, table} ->
-        {player, hand, table}
+      {player, hand, table, turns} ->
+        {player, hand, table, turns}
+      _ ->
+        receive_turn()
     after
       5000 ->
         assert false, "Timeout"
     end
   end
 
+  defp receive_new_table() do
+    receive do
+      {:new_table, table} ->
+        {:new_table, table}
+      _ ->
+        receive_new_table()
+    after
+      5000 ->
+        assert false, "Timeout"
+    end
+  end
+
+  defp spawn_ready(receiver_pid, client_pid, expected_round) do
+    case TC.ready(client_pid) do
+      {:start_round, ^expected_round, hand, table, turns} ->
+        receiver_pid <- {client_pid, hand, table, turns}
+      _ ->
+        receiver_pid <- :ok
+    end
+  end
+
   setup do
-    {:ok, pid} = :gen_server.start_link(Kozel.Table.Server, [], [])
-    {:ok, pid: pid}
+    {:ok, table_pid} = :gen_server.start_link(Kozel.Table.Server, [], [])
+
+    {:ok, pid1} = TC.start_link(table_pid, self)
+    {:ok, pid2} = TC.start_link(table_pid, self)
+    {:ok, pid3} = TC.start_link(table_pid, self)
+    {:ok, pid4} = TC.start_link(table_pid, self)
+
+    {:ok, pid1: pid1, pid2: pid2,
+          pid3: pid3, pid4: pid4}
   end
 
   test "game", meta do
-    server_pid = meta[:pid]
+    pid1 = meta[:pid1]
+    pid2 = meta[:pid2]
+    pid3 = meta[:pid3]
+    pid4 = meta[:pid4]
 
-    {:ok, token1} = join(server_pid)
-    {:ok, token2} = join(server_pid)
-    {:ok, token3} = join(server_pid)
-    {:ok, token4} = join(server_pid)
+    token1  = TC.join(pid1)
+    token2 = TC.join(pid2)
+    token3 = TC.join(pid3)
+    token4 = TC.join(pid4)
 
-    hand1 = get_cards(server_pid, token1)
-    hand2 = get_cards(server_pid, token2)
-    hand3 = get_cards(server_pid, token3)
-    hand4 = get_cards(server_pid, token4)
+    assert Enum.count(Enum.uniq([token1, token2, token3, token4])) == 4
+
+    hand1 = TC.get_cards(pid1)
+    hand2 = TC.get_cards(pid2)
+    hand3 = TC.get_cards(pid3)
+    hand4 = TC.get_cards(pid4)
 
     assert Enum.count(hand1) == 8
     assert Enum.count(hand2) == 8
@@ -41,61 +131,33 @@ defmodule Kozel.Table.Test do
 
     self_pid = self
 
-    players = [:player1, :player2, :player3, :player4]
+    players = [pid1, pid2, pid3, pid4]
 
-    players_data = HashDict.new [{:player1, {token1, hand1}},
-                                 {:player2, {token2, hand2}},
-                                 {:player3, {token3, hand3}},
-                                 {:player4, {token4, hand4}}]
+    Process.spawn(fn() -> spawn_ready(self_pid, pid1, 1) end)
+    Process.spawn(fn() -> spawn_ready(self_pid, pid2, 1) end)
+    Process.spawn(fn() -> spawn_ready(self_pid, pid3, 1) end)
+    Process.spawn(fn() -> spawn_ready(self_pid, pid4, 1) end)
 
-    Process.spawn(fn() ->
-                      {:you_turn, hand, table} = ready(server_pid, token1)
-                      self_pid <- {:player1, hand, table}
-                  end)
-    Process.spawn(fn() ->
-                      {:you_turn, hand, table} = ready(server_pid, token2)
-                      self_pid <- {:player2, hand, table}
-                  end)
-    Process.spawn(fn() ->
-                      {:you_turn, hand, table} = ready(server_pid, token3)
-                      self_pid <- {:player3, hand, table}
-                  end)
-    Process.spawn(fn() ->
-                      {:you_turn, hand, table} = ready(server_pid, token4)
-                      self_pid <- {:player4, hand, table}
-                  end)
-
-    {player, hand, table} = receive_turn()
+    {player, hand, table, available_turns} = receive_turn()
 
     assert Enum.member?(players, player) == true
     List.delete(players, player)
 
-    {token, chand} = HashDict.fetch!(players_data, player)
-    assert chand == hand
     assert Enum.count(hand) == 8
     assert Enum.count(table) == 0
 
-    [card|_] = available_turns(hand, table)
-    {:ok, {new_hand, new_table}} = :gen_server.call(server_pid, {:turn, token, card, hand})
+    [card|_] = available_turns
+
+    {new_hand, new_table} = TC.turn(player, card)
     assert Enum.count(new_hand) == 7
     assert Enum.count(new_table) == 1
 
-    players_data = HashDict.put(players_data, player, {token, new_hand})
+    {:new_table, new_table2} = receive_new_table()
+    {:new_table, new_table3} = receive_new_table()
+    {:new_table, new_table4} = receive_new_table()
 
-    {player, hand, table} = receive_turn()
-
-    assert Enum.member?(players, player) == true
-    List.delete(players, player)
-
-    {token, chand} = HashDict.fetch!(players_data, player)
-    assert chand == hand
-    assert Enum.count(hand) == 8
-    assert Enum.count(table) == 1
-
-    [card|_] = available_turns(hand, table)
-    {:ok, {new_hand, new_table}} = :gen_server.call(server_pid, {:turn, token, card, hand})
-    assert Enum.count(new_hand) == 7
-    assert Enum.count(new_table) == 2
+    assert Enum.count(Enum.uniq([new_table, new_table2,
+                                 new_table3, new_table4])) == 1
   end
 
 end
