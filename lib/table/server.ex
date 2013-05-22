@@ -163,10 +163,7 @@ defmodule Kozel.Table.Server do
   end
 
   defp process_round_end(TableState[round: round,
-                                    tokens_by_id: tokens,
-                                    hands_by_token: hands,
                                     players_by_token: players,
-                                    next_move: next_move,
                                     table: table]=state) do
     {winner, count} = count(table)
     state = if rem(winner, 2) == 1 do
