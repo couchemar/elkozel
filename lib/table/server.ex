@@ -6,7 +6,8 @@ defmodule Kozel.Table.Server do
                               deal: 1,
                               check_hand: 2,
                               available_turns: 2,
-                              process_turn: 4 ]
+                              process_turn: 4,
+                              count: 1]
 
   def start_link() do
     :gen_server.start_link(__MODULE__, [], [])
@@ -20,7 +21,8 @@ defmodule Kozel.Table.Server do
                         hands_by_token: nil,
                         next_move: 0,
                         ready: [],
-                        table: []
+                        table: [],
+                        points: {0,0}
 
   def init([]) do
     :random.seed(:os.timestamp)
@@ -101,11 +103,10 @@ defmodule Kozel.Table.Server do
           new_state = state.update_next_move(get_next_move &1)
           new_state = new_state.hands_by_token(HashDict.put(hands, token, new_hand))
           new_state = new_state.table(new_table)
-          new_state = new_state.update_round(fn(x) -> x+1 end)
           if Enum.count(new_table) < 4 do
             notify_next_turn(new_state)
           else
-#            notify_next_round(new_state)
+            new_state = process_round_end(new_state)
           end
           {:reply, {new_hand, new_table}, new_state}
         else
@@ -159,6 +160,26 @@ defmodule Kozel.Table.Server do
       :gen_server.cast(pid, {:next_turn, round, {:player, next_move}, table})
     end
 
+  end
+
+  defp process_round_end(TableState[round: round,
+                                    tokens_by_id: tokens,
+                                    hands_by_token: hands,
+                                    players_by_token: players,
+                                    next_move: next_move,
+                                    table: table]=state) do
+    {winner, count} = count(table)
+    state = if rem(winner, 2) == 1 do
+              state.update_points(fn({p1,p2}) -> {p1+count, p2} end)
+            else
+              state.update_points(fn({p1,p2}) -> {p1, p2+count} end)
+            end
+    state = state.next_move(winner)
+
+    lc {pid, _} inlist HashDict.values(players) do
+      :gen_server.cast(pid, {:round_end, round, {:winner, winner}})
+    end
+    state
   end
 
   defp get_next_move(next_move) when next_move == 4 do

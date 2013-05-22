@@ -61,6 +61,12 @@ defmodule Kozel.Table.Test.Client do
       receiver <- {:new_table, table}
       {:noreply, state}
     end
+
+    def handle_cast({:round_end, round, {:winner, _winner}},
+                    ClientState[cast_receiver_pid: receiver]=state) do
+      receiver <- {:round_end, round}
+      {:noreply, state}
+    end
 end
 
 defmodule Kozel.Table.Test do
@@ -72,20 +78,6 @@ defmodule Kozel.Table.Test do
     receive do
       {player, hand, table, turns} ->
         {player, hand, table, turns}
-#      _ ->
-#        receive_turn()
-    after
-      5000 ->
-        flunk "Timeout"
-    end
-  end
-
-  defp receive_new_table() do
-    receive do
-      {:new_table, table} ->
-        table
-#      _ ->
-#        receive_new_table()
     after
       5000 ->
         flunk "Timeout"
@@ -205,6 +197,7 @@ defmodule Kozel.Table.Test do
 
     assert Enum.member?(players, player) == true
     players = List.delete(players, player)
+    assert players == []
 
     assert Enum.count(hand) == 8
     assert Enum.count(table) == 3
@@ -215,7 +208,9 @@ defmodule Kozel.Table.Test do
     assert Enum.count(new_hand) == 7
     assert Enum.count(new_table) == 4
 
-    
+    assert_received {:round_end, 1}
+    assert_received {:round_end, 1}
+    assert_received {:round_end, 1}
 
   end
 
