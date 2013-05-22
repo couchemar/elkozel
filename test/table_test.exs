@@ -140,9 +140,7 @@ defmodule Kozel.Table.Test do
     Process.spawn(fn() -> spawn_ready(self_pid, pid4, 1) end)
 
     {player, hand, table, available_turns} = receive_turn()
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
+    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
     assert Enum.member?(players, player) == true
     players = List.delete(players, player)
@@ -157,9 +155,7 @@ defmodule Kozel.Table.Test do
     assert Enum.count(new_table) == 1
 
     {player, hand, table, available_turns} = receive_turn()
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
+    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
     assert Enum.member?(players, player) == true
     players = List.delete(players, player)
@@ -174,9 +170,7 @@ defmodule Kozel.Table.Test do
     assert Enum.count(new_table) == 2
 
     {player, hand, table, available_turns} = receive_turn()
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
+    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
     assert Enum.member?(players, player) == true
     players = List.delete(players, player)
@@ -191,9 +185,7 @@ defmodule Kozel.Table.Test do
     assert Enum.count(new_table) == 3
 
     {player, hand, table, available_turns} = receive_turn()
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
-    assert_receive {:new_table, table}
+    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
     assert Enum.member?(players, player) == true
     players = List.delete(players, player)
@@ -208,9 +200,8 @@ defmodule Kozel.Table.Test do
     assert Enum.count(new_hand) == 7
     assert Enum.count(new_table) == 4
 
-    assert_receive {:round_end, 1}
-    assert_receive {:round_end, 1}
-    assert_receive {:round_end, 1}
+    lc _ inlist Enum.to_list(1..3), do: assert_receive {:round_end, 1}
+
   end
 
 end
