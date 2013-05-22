@@ -83,8 +83,7 @@ defmodule Kozel.Table.Server do
     {:noreply, new_state}
   end
 
-  defcall turn(token, card, hand), from: from,
-                                   state: TableState[hands_by_token: hands,
+  defcall turn(token, card, hand), state: TableState[hands_by_token: hands,
                                                      ids_by_token: ids,
                                                      table: table]=state do
     case check_hand(card, hand) do
@@ -103,9 +102,10 @@ defmodule Kozel.Table.Server do
           new_state = new_state.hands_by_token(HashDict.put(hands, token, new_hand))
           new_state = new_state.table(new_table)
           new_state = new_state.update_round(fn(x) -> x+1 end)
-          notify_table(new_state, from)
-          if Enum.count(new_table) == 4 do
+          if Enum.count(new_table) < 4 do
             notify_next_turn(new_state)
+          else
+#            notify_next_round(new_state)
           end
           {:reply, {new_hand, new_table}, new_state}
         else
@@ -135,20 +135,12 @@ defmodule Kozel.Table.Server do
     available_turns = available_turns(hand, table)
     :gen_server.reply(pid, {:start_round, round, hand, table, available_turns})
     lc token inlist List.delete(ready, next_player_token) do
-          pid = HashDict.fetch!(players, token)
-          :gen_server.reply(pid, {:start_round, round, {:player, next_move}})
+      pid = HashDict.fetch!(players, token)
+      :gen_server.reply(pid, {:start_round, round, {:player, next_move}, table})
     end
   end
 
-  defp notify_table(TableState[players_by_token: players,
-                               table: table]=state, exclude) do
-    lc {pid, _} inlist HashDict.values(players), pid != exclude do
-      :gen_server.cast(pid, {:new_table, table})
-    end
-
-  end
   defp notify_next_turn(TableState[round: round,
-                                   ready: ready,
                                    tokens_by_id: tokens,
                                    hands_by_token: hands,
                                    players_by_token: players,
@@ -157,14 +149,14 @@ defmodule Kozel.Table.Server do
 
     next_player_token = HashDict.fetch!(tokens, next_move)
 
-    next_pid = HashDict.fetch!(players, next_player_token)
+    {next_pid, _} = HashDict.fetch!(players, next_player_token)
     hand = HashDict.fetch!(hands, next_player_token)
 
     available_turns = available_turns(hand, table)
-    :gen_server.cast(next_pid, {:start_round, round, hand, table, available_turns})
+    :gen_server.cast(next_pid, {:next_turn, round, hand, table, available_turns})
 
     lc {pid, _} inlist HashDict.values(players), pid != next_pid do
-      :gen_server.cast(pid, {:start_round, round, {:player, next_move}})
+      :gen_server.cast(pid, {:next_turn, round, {:player, next_move}, table})
     end
 
   end

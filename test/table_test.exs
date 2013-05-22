@@ -49,7 +49,14 @@ defmodule Kozel.Table.Test.Client do
       {:reply, TS.turn(table_pid, token, card, hand), state}
     end
 
-    def handle_cast({:new_table, table},
+    def handle_cast({:next_turn, _round, hand, table, available_turns},
+                    ClientState[cast_receiver_pid: receiver]=state) do
+      state = state.hand(hand)
+      receiver <- {self, hand, table, available_turns}
+      {:noreply, state}
+    end
+
+    def handle_cast({:next_turn, _round, {:player, _next_move}, table},
                     ClientState[cast_receiver_pid: receiver]=state) do
       receiver <- {:new_table, table}
       {:noreply, state}
@@ -65,23 +72,23 @@ defmodule Kozel.Table.Test do
     receive do
       {player, hand, table, turns} ->
         {player, hand, table, turns}
-      _ ->
-        receive_turn()
+#      _ ->
+#        receive_turn()
     after
       5000 ->
-        assert false, "Timeout"
+        flunk "Timeout"
     end
   end
 
   defp receive_new_table() do
     receive do
       {:new_table, table} ->
-        {:new_table, table}
-      _ ->
-        receive_new_table()
+        table
+#      _ ->
+#        receive_new_table()
     after
       5000 ->
-        assert false, "Timeout"
+        flunk "Timeout"
     end
   end
 
@@ -89,8 +96,8 @@ defmodule Kozel.Table.Test do
     case TC.ready(client_pid) do
       {:start_round, ^expected_round, hand, table, turns} ->
         receiver_pid <- {client_pid, hand, table, turns}
-      _ ->
-        receiver_pid <- :ok
+      {:start_round, ^expected_round, {:player, _next_move}, table} ->
+        receiver_pid <- {:new_table, table}
     end
   end
 
@@ -131,6 +138,8 @@ defmodule Kozel.Table.Test do
 
     self_pid = self
 
+    # round 1
+
     players = [pid1, pid2, pid3, pid4]
 
     Process.spawn(fn() -> spawn_ready(self_pid, pid1, 1) end)
@@ -139,9 +148,12 @@ defmodule Kozel.Table.Test do
     Process.spawn(fn() -> spawn_ready(self_pid, pid4, 1) end)
 
     {player, hand, table, available_turns} = receive_turn()
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
 
     assert Enum.member?(players, player) == true
-    List.delete(players, player)
+    players = List.delete(players, player)
 
     assert Enum.count(hand) == 8
     assert Enum.count(table) == 0
@@ -152,12 +164,59 @@ defmodule Kozel.Table.Test do
     assert Enum.count(new_hand) == 7
     assert Enum.count(new_table) == 1
 
-    {:new_table, new_table2} = receive_new_table()
-    {:new_table, new_table3} = receive_new_table()
-    {:new_table, new_table4} = receive_new_table()
+    {player, hand, table, available_turns} = receive_turn()
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
 
-    assert Enum.count(Enum.uniq([new_table, new_table2,
-                                 new_table3, new_table4])) == 1
+    assert Enum.member?(players, player) == true
+    players = List.delete(players, player)
+
+    assert Enum.count(hand) == 8
+    assert Enum.count(table) == 1
+
+    [card|_] = available_turns
+
+    {new_hand, new_table} = TC.turn(player, card)
+    assert Enum.count(new_hand) == 7
+    assert Enum.count(new_table) == 2
+
+    {player, hand, table, available_turns} = receive_turn()
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
+
+    assert Enum.member?(players, player) == true
+    players = List.delete(players, player)
+
+    assert Enum.count(hand) == 8
+    assert Enum.count(table) == 2
+
+    [card|_] = available_turns
+
+    {new_hand, new_table} = TC.turn(player, card)
+    assert Enum.count(new_hand) == 7
+    assert Enum.count(new_table) == 3
+
+    {player, hand, table, available_turns} = receive_turn()
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
+    assert_received {:new_table, table}
+
+    assert Enum.member?(players, player) == true
+    players = List.delete(players, player)
+
+    assert Enum.count(hand) == 8
+    assert Enum.count(table) == 3
+
+    [card|_] = available_turns
+
+    {new_hand, new_table} = TC.turn(player, card)
+    assert Enum.count(new_hand) == 7
+    assert Enum.count(new_table) == 4
+
+    
+
   end
 
 end
