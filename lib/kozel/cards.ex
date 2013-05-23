@@ -124,9 +124,14 @@ defmodule Kozel.Cards do
   end
   def available_turns(hand, table) do
     { cards, trumps } = split_cards(hand)
+
     {_, start_card} = List.last(table)
     if get_power(start_card) > 0 do
-      trumps
+      if !Enum.empty?(trumps) do
+        trumps
+      else
+        hand
+      end
     else
       {suit, _} = start_card
       suit_cards = Enum.filter cards, fn({s, _}) -> s == suit end

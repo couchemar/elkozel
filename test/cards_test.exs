@@ -66,6 +66,13 @@ defmodule Kozel.Cards.Test do
                             {:clubs, :j},
                             {:hearts, :a}], [{0, {:spades, :q}}]) == [{:diamonds, 7},
                                                                       {:clubs, :j}]
+
+    assert available_turns([{:spades, 8}],
+                           [{4, {:diamonds, :k}},
+                            {3, {:spades, :q}},
+                            {2, {:diamonds, 10}}]
+                          ) == [{:spades, 8}]
+
   end
 
   test "turn" do

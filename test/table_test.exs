@@ -111,7 +111,7 @@ defmodule Kozel.Table.Test do
     pid3 = meta[:pid3]
     pid4 = meta[:pid4]
 
-    token1  = TC.join(pid1)
+    token1 = TC.join(pid1)
     token2 = TC.join(pid2)
     token3 = TC.join(pid3)
     token4 = TC.join(pid4)
@@ -130,78 +130,74 @@ defmodule Kozel.Table.Test do
 
     self_pid = self
 
-    # round 1
+    lc r inlist Enum.to_list(1..8) do
+      players = [pid1, pid2, pid3, pid4]
 
-    players = [pid1, pid2, pid3, pid4]
+      lc pid inlist players, do: Process.spawn(fn() -> spawn_ready(self_pid, pid, r) end)
 
-    Process.spawn(fn() -> spawn_ready(self_pid, pid1, 1) end)
-    Process.spawn(fn() -> spawn_ready(self_pid, pid2, 1) end)
-    Process.spawn(fn() -> spawn_ready(self_pid, pid3, 1) end)
-    Process.spawn(fn() -> spawn_ready(self_pid, pid4, 1) end)
+      {player, hand, table, available_turns} = receive_turn()
 
-    {player, hand, table, available_turns} = receive_turn()
-    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
+      lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
-    assert Enum.member?(players, player) == true
-    players = List.delete(players, player)
+      assert Enum.member?(players, player) == true
+      players = List.delete(players, player)
 
-    assert Enum.count(hand) == 8
-    assert Enum.count(table) == 0
+      assert Enum.count(hand) == 8 - (r -1)
+      assert Enum.count(table) == 0
 
-    [card|_] = available_turns
+      [card|_] = available_turns
 
-    {new_hand, new_table} = TC.turn(player, card)
-    assert Enum.count(new_hand) == 7
-    assert Enum.count(new_table) == 1
+      {new_hand, new_table} = TC.turn(player, card)
+      assert Enum.count(new_hand) == 7 - (r -1)
+      assert Enum.count(new_table) == 1
 
-    {player, hand, table, available_turns} = receive_turn()
-    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
+      {player, hand, table, available_turns} = receive_turn()
+      lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
-    assert Enum.member?(players, player) == true
-    players = List.delete(players, player)
+      assert Enum.member?(players, player) == true
+      players = List.delete(players, player)
 
-    assert Enum.count(hand) == 8
-    assert Enum.count(table) == 1
+      assert Enum.count(hand) == 8 - (r -1)
+      assert Enum.count(table) == 1
 
-    [card|_] = available_turns
+      [card|_] = available_turns
 
-    {new_hand, new_table} = TC.turn(player, card)
-    assert Enum.count(new_hand) == 7
-    assert Enum.count(new_table) == 2
+      {new_hand, new_table} = TC.turn(player, card)
+      assert Enum.count(new_hand) == 7 - (r -1)
+      assert Enum.count(new_table) == 2
 
-    {player, hand, table, available_turns} = receive_turn()
-    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
+      {player, hand, table, available_turns} = receive_turn()
+      lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
-    assert Enum.member?(players, player) == true
-    players = List.delete(players, player)
+      assert Enum.member?(players, player) == true
+      players = List.delete(players, player)
 
-    assert Enum.count(hand) == 8
-    assert Enum.count(table) == 2
+      assert Enum.count(hand) == 8 - (r -1)
+      assert Enum.count(table) == 2
 
-    [card|_] = available_turns
+      [card|_] = available_turns
 
-    {new_hand, new_table} = TC.turn(player, card)
-    assert Enum.count(new_hand) == 7
-    assert Enum.count(new_table) == 3
+      {new_hand, new_table} = TC.turn(player, card)
+      assert Enum.count(new_hand) == 7 - (r -1)
+      assert Enum.count(new_table) == 3
 
-    {player, hand, table, available_turns} = receive_turn()
-    lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
+      {player, hand, table, available_turns} = receive_turn()
+      lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
 
-    assert Enum.member?(players, player) == true
-    players = List.delete(players, player)
-    assert players == []
+      assert Enum.member?(players, player) == true
+      players = List.delete(players, player)
+      assert players == []
 
-    assert Enum.count(hand) == 8
-    assert Enum.count(table) == 3
+      assert Enum.count(hand) == 8 - (r -1)
+      assert Enum.count(table) == 3
 
-    [card|_] = available_turns
+      [card|_] = available_turns
 
-    {new_hand, new_table} = TC.turn(player, card)
-    assert Enum.count(new_hand) == 7
-    assert Enum.count(new_table) == 4
+      {new_hand, new_table} = TC.turn(player, card)
+      assert Enum.count(new_hand) == 7 - (r -1)
+      assert Enum.count(new_table) == 4
 
-    lc _ inlist Enum.to_list(1..3), do: assert_receive {:round_end, 1}
-
+      lc _ inlist Enum.to_list(1..4), do: assert_receive {:round_end, ^r}
+    end
   end
-
 end
