@@ -184,15 +184,15 @@ defmodule Kozel.Table.Server do
                                    players_by_token: players,
                                    points: {p1, p2}=points]=state) do
     if HashDict.values(hands) == [[],[],[],[]] do
+      winner = cond do
+        p1 == p2 ->
+          nil
+        p1 > p2 ->
+          1
+        p1 < p2 ->
+          2
+      end
       lc {pid, _} inlist HashDict.values(players) do
-        winner = cond do
-          p1 == p2 ->
-            nil
-          p1 > p2 ->
-            1
-          p1 < p2 ->
-            2
-        end
         :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:points, points}})
       end
     end
