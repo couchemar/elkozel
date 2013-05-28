@@ -71,23 +71,22 @@ defmodule Kozel.Table.Server do
       :ok ->
         if hand != HashDict.fetch!(hands, token) do
           {:reply, {:error, "Not your hand"}, state}
-        end
-
-        if Enum.member?(available_turns(hand, table), card) do
-          id = HashDict.fetch! ids, token
-          {new_hand, new_table} = make_turn(card, hand, id, table)
-
-          state = state.update_next_move(get_next_move &1)
-                       .hands_by_token(HashDict.put(hands, token, new_hand))
-                       .table(new_table)
-          if Enum.count(new_table) < 4 do
-            notify_next_turn(state)
-          else
-            state = state |> process_round_end |> process_game_end
-          end
-          {:reply, {new_hand, new_table}, state}
         else
-          {:reply, {:error, "Unexpected move"}, state}
+          if Enum.member?(available_turns(hand, table), card) do
+            {new_hand, new_table} = make_turn(card, hand, HashDict.fetch!(ids, token), table)
+
+            state = state.update_next_move(get_next_move &1)
+                         .hands_by_token(HashDict.put(hands, token, new_hand))
+                         .table(new_table)
+            state = if Enum.count(new_table) < 4 do
+                      notify_next_turn(state)
+                    else
+                      state |> process_round_end |> process_game_end
+                    end
+            {:reply, {new_hand, new_table}, state}
+          else
+            {:reply, {:error, "Unexpected move"}, state}
+          end
         end
     end
   end
@@ -150,7 +149,7 @@ defmodule Kozel.Table.Server do
                                    hands_by_token: hands,
                                    players_by_token: players,
                                    next_move: next_move,
-                                   table: table]) do
+                                   table: table]=state) do
 
     next_player_token = HashDict.fetch!(tokens, next_move)
 
@@ -163,6 +162,7 @@ defmodule Kozel.Table.Server do
     lc {pid, _} inlist HashDict.values(players), pid != next_pid do
       :gen_server.cast(pid, {:next_turn, round, {:player, next_move}, table})
     end
+    state
   end
 
   defp process_round_end(TableState[round: round,
