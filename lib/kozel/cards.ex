@@ -143,7 +143,7 @@ defmodule Kozel.Cards do
     end
   end
 
-  def process_turn(card, hand, player, table) do
+  def make_turn(card, hand, player, table) do
     hand2 = List.delete hand, card
     table2 = [ { player, card } | table]
     {hand2, table2}

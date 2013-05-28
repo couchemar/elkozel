@@ -6,7 +6,7 @@ defmodule Kozel.Table.Server do
                               deal: 1,
                               check_hand: 2,
                               available_turns: 2,
-                              process_turn: 4,
+                              make_turn: 4,
                               count: 1 ]
 
   def start_link() do
@@ -37,31 +37,29 @@ defmodule Kozel.Table.Server do
 
   defcall get_cards(token), state: TableState[decs: [d|new_decs],
                                               hands_by_token: hands]=state do
-    hands = if hands == nil do
-              HashDict.new [{token, d}]
-            else
-              HashDict.put hands, token, d
-            end
-    state = state.decs(new_decs)
-    {:reply, d, state.hands_by_token(hands)}
+    {:reply, d,
+     state.hands_by_token(if hands == nil do
+                            HashDict.new [{token, d}]
+                          else
+                            HashDict.put hands, token, d
+                          end).decs(new_decs)}
   end
 
   defcall ready(token), from: from,
                         state: TableState[ready: ready,
                                           players_by_token: players]=state do
-    if players == nil do
-      players = HashDict.new [{token, from}]
-    else
-      players = HashDict.put players, token, from
-    end
-    new_state = state.players_by_token(players)
+    state = state.players_by_token(
+        if players == nil do
+          HashDict.new [{token, from}]
+        else
+          HashDict.put players, token, from
+        end
+    ).ready([token|ready])
 
-    new_state = new_state.ready([token|ready])
     if Enum.count(ready) == 3 do
-
-      new_state = process_ready(new_state)
+      state = process_all_ready(state)
     end
-    {:noreply, new_state}
+    {:noreply, state}
   end
 
   defcall turn(token, card, hand), state: TableState[hands_by_token: hands,
@@ -77,17 +75,17 @@ defmodule Kozel.Table.Server do
 
         if Enum.member?(available_turns(hand, table), card) do
           id = HashDict.fetch! ids, token
-          {new_hand, new_table} = process_turn(card, hand, id, table)
+          {new_hand, new_table} = make_turn(card, hand, id, table)
 
-          new_state = state.update_next_move(get_next_move &1)
-          new_state = new_state.hands_by_token(HashDict.put(hands, token, new_hand))
-          new_state = new_state.table(new_table)
+          state = state.update_next_move(get_next_move &1)
+                       .hands_by_token(HashDict.put(hands, token, new_hand))
+                       .table(new_table)
           if Enum.count(new_table) < 4 do
-            notify_next_turn(new_state)
+            notify_next_turn(state)
           else
-            new_state = new_state |> process_round_end |> process_game_end
+            state = state |> process_round_end |> process_game_end
           end
-          {:reply, {new_hand, new_table}, new_state}
+          {:reply, {new_hand, new_table}, state}
         else
           {:reply, {:error, "Unexpected move"}, state}
         end
@@ -124,11 +122,11 @@ defmodule Kozel.Table.Server do
     state
   end
 
-  defp process_ready(TableState[ready: ready,
-                                tokens_by_id: tokens,
-                                hands_by_token: hands,
-                                players_by_token: players,
-                                next_move: next_move]=state) do
+  defp process_all_ready(TableState[ready: ready,
+                                    tokens_by_id: tokens,
+                                    hands_by_token: hands,
+                                    players_by_token: players,
+                                    next_move: next_move]=state) do
     state = state.update_round(fn(x) -> x+1 end)
     table = []
 
