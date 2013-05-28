@@ -7,7 +7,7 @@ defmodule Kozel.Table.Server do
                               check_hand: 2,
                               available_turns: 2,
                               process_turn: 4,
-                              count: 1]
+                              count: 1 ]
 
   def start_link() do
     :gen_server.start_link(__MODULE__, [], [])
@@ -30,43 +30,20 @@ defmodule Kozel.Table.Server do
     {:ok, TableState.new(decs: [h1, h2, h3, h4])}
   end
 
-  defcall join, state: TableState[ids_by_token: ids,
-                                  tokens_by_id: tokens]=state do
+  defcall join, state: state do
     token = :os.timestamp
-
-    if ids == nil do
-      id = 1
-      ids = HashDict.new [{token, id}]
-    else
-      id = HashDict.size(ids) + 1
-      ids = HashDict.put ids, token, id
-    end
-    new_state = state.ids_by_token(ids)
-
-    if tokens == nil do
-      tokens = HashDict.new [{id, token}]
-    else
-      tokens = HashDict.put tokens, id, token
-    end
-
-    new_state = new_state.tokens_by_id(tokens)
-
-    if id == 4 do
-      new_state = new_state.next_move(:random.uniform(4))
-    end
-    {:reply, token, new_state}
+    {:reply, token, process_join(token, state)}
   end
 
-  defcall get_cards(token), state: TableState[decs: decs,
+  defcall get_cards(token), state: TableState[decs: [d|new_decs],
                                               hands_by_token: hands]=state do
-    [d|new_decs] = decs
-    if hands == nil do
-      hands = HashDict.new [{token, d}]
-    else
-      hands = HashDict.put hands, token, d
-    end
-    new_state = state.decs(new_decs)
-    {:reply, d, new_state.hands_by_token(hands)}
+    hands = if hands == nil do
+              HashDict.new [{token, d}]
+            else
+              HashDict.put hands, token, d
+            end
+    state = state.decs(new_decs)
+    {:reply, d, state.hands_by_token(hands)}
   end
 
   defcall ready(token), from: from,
@@ -122,6 +99,30 @@ defmodule Kozel.Table.Server do
   end
 
   # Private
+
+  defp process_join(token, TableState[ids_by_token: ids,
+                                      tokens_by_id: tokens]=state) do
+    if ids == nil do
+      id = 1
+      ids = HashDict.new [{token, id}]
+    else
+      id = HashDict.size(ids) + 1
+      ids = HashDict.put ids, token, id
+    end
+    state = state.ids_by_token(ids)
+
+    if tokens == nil do
+      tokens = HashDict.new [{id, token}]
+    else
+      tokens = HashDict.put tokens, id, token
+    end
+
+    state = state.tokens_by_id(tokens)
+    if id == 4 do
+      state = state.next_move(:random.uniform(4))
+    end
+    state
+  end
 
   defp process_ready(TableState[ready: ready,
                                 tokens_by_id: tokens,
@@ -188,13 +189,13 @@ defmodule Kozel.Table.Server do
                                    points: {p1, p2}=points]=state) do
     if HashDict.values(hands) == [[],[],[],[]] do
       lc {pid, _} inlist HashDict.values(players) do
-        cond do
+        winner = cond do
+          p1 == p2 ->
+            nil
           p1 > p2 ->
-            winner = 1
+            1
           p1 < p2 ->
-            winner = 2
-          p1 == p2
-            winner = nil
+            2
         end
         :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:points, points}})
       end
