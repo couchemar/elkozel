@@ -67,6 +67,12 @@ defmodule Kozel.Table.Test.Client do
       receiver <- {:round_end, round}
       {:noreply, state}
     end
+
+    def handle_cast({:game_end, {:winner_team, _winner}, {:points, points}},
+                    ClientState[cast_receiver_pid: receiver]=state) do
+      receiver <- {:game_end, points}
+      {:noreply, state}
+    end
 end
 
 defmodule Kozel.Table.Test do
@@ -199,5 +205,11 @@ defmodule Kozel.Table.Test do
 
       lc _ inlist Enum.to_list(1..4), do: assert_receive {:round_end, ^r}
     end
+
+    lc _ inlist Enum.to_list(1..4) do
+      assert_receive {:game_end, {a, b}}
+      assert a + b == 120
+    end
+
   end
 end

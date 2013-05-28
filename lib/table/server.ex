@@ -108,7 +108,7 @@ defmodule Kozel.Table.Server do
           if Enum.count(new_table) < 4 do
             notify_next_turn(new_state)
           else
-            new_state = process_round_end(new_state)
+            new_state = new_state |> process_round_end |> process_game_end
           end
           {:reply, {new_hand, new_table}, new_state}
         else
@@ -179,6 +179,25 @@ defmodule Kozel.Table.Server do
 
     lc {pid, _} inlist HashDict.values(players) do
       :gen_server.cast(pid, {:round_end, round, {:winner, winner}})
+    end
+    state
+  end
+
+  defp process_game_end(TableState[hands_by_token: hands,
+                                   players_by_token: players,
+                                   points: {p1, p2}=points]=state) do
+    if HashDict.values(hands) == [[],[],[],[]] do
+      lc {pid, _} inlist HashDict.values(players) do
+        cond do
+          p1 > p2 ->
+            winner = 1
+          p1 < p2 ->
+            winner = 2
+          p1 == p2
+            winner = nil
+        end
+        :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:points, points}})
+      end
     end
     state
   end
