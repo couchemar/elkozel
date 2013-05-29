@@ -9,6 +9,8 @@ defmodule Kozel.Table.Server do
                               make_turn: 4,
                               count: 1 ]
 
+  require Lager
+
   def start_link() do
     :gen_server.start_link(__MODULE__, [], [])
   end
@@ -25,6 +27,7 @@ defmodule Kozel.Table.Server do
                         points: {0,0}
 
   def init([]) do
+    Lager.info "Initializing table #{inspect self}"
     :random.seed(:os.timestamp)
     {h1, h2, h3, h4} = deal(produce_cards)
     {:ok, TableState.new(decs: [h1, h2, h3, h4])}

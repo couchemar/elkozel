@@ -1,1 +1,4 @@
-[ "genx": {:git,"https://github.com/yrashk/genx.git","c0aec75a29edb8cb9bfc9af37b2f6d3c4b405f39",[]} ]
+[ "exlager": {:git,"https://github.com/khia/exlager.git","f8dd0715d7668290d7d02a4517acfee4e8be885c",[]},
+  "genx": {:git,"https://github.com/yrashk/genx.git","c0aec75a29edb8cb9bfc9af37b2f6d3c4b405f39",[]},
+  "goldrush": {:git,"https://github.com/DeadZen/goldrush.git","879c69874a555b2c13498aa4a3da6f6bbbb6a031",[tag: "879c69874a"]},
+  "lager": {:git,"https://github.com/basho/lager.git","dc23b34ad40de2473c36d1a2bfeca4910279cc3f",[]} ]
