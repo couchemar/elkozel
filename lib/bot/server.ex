@@ -29,7 +29,34 @@ defmodule Kozel.Bot.Server do
     :erlang.cancel_timer(timer)
     token = TS.join(table_pid)
     hand = TS.get_cards(table_pid, token)
-    {:noreply, state.token(token).hand(hand)}
+
+    state = state.token(token).hand(hand) |> process_ready
+    {:noreply, state}
   end
 
-end
+  defp process_ready(BotState[token: token,
+                              table_pid: table_pid]=state) do
+    _process_ready TS.ready(table_pid, token), state
+  end
+
+  defp _process_ready({:start_round, _round, hand, _table, turns},
+                      BotState[token: token,
+                               table_pid: table_pid]=state) do
+    Lager.info "My turn"
+    {_new_hand, _new_table} = TS.turn(table_pid, token, get_card(turns), hand)
+    state
+  end
+
+  defp _process_ready({:start_round, _round, {:player, _player}, _table}, state) do
+    Lager.info "Waiting"
+    state
+  end
+
+  def get_card([card]) do
+    card
+  end
+  def get_card([card|_]) do
+    card
+  end
+
+ end

@@ -24,5 +24,13 @@ defmodule Kozel.Bot.Test do
     token = TC.join(hand_pid)
     hand = TC.get_cards(hand_pid)
 
+    case TC.ready(hand_pid) do
+      {:start_round, _round, hand, _table, turns} ->
+        [card|_] = turns
+        {_new_hand, _new_table} = TC.turn(hand_pid, card)
+      {:start_round, _round, {:player, _player}, _table} ->
+        IO.puts "Wait"
+    end
+
   end
 end
