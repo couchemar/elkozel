@@ -4,7 +4,6 @@ defmodule TableCase do
   use ExUnit.CaseTemplate
 
   setup do
-    IO.puts "Test"
     {:ok, table_pid} = :gen_server.start_link(Kozel.Table.Server, [], [])
     {:ok, table_pid: table_pid}
   end

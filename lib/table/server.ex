@@ -33,13 +33,15 @@ defmodule Kozel.Table.Server do
     {:ok, TableState.new(decs: [h1, h2, h3, h4])}
   end
 
-  defcall join, state: state do
+  defcall join, from: from, state: state do
     token = :os.timestamp
+    Lager.info "Player ~p join, got token ~p", [from, token]
     {:reply, token, process_join(token, state)}
   end
 
   defcall get_cards(token), state: TableState[decs: [d|new_decs],
                                               hands_by_token: hands]=state do
+    Lager.info "Player #{inspect token} request cards"
     {:reply, d,
      state.hands_by_token(if hands == nil do
                             HashDict.new [{token, d}]
