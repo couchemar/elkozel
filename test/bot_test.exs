@@ -38,16 +38,20 @@ defmodule Kozel.Bot.Test do
     _token = TC.join(hand_pid)
     _hand = TC.get_cards(hand_pid)
 
-    case TC.ready(hand_pid) do
-      {:start_round, round, _hand, _table, turns} ->
-        [card|_] = turns
-        {_new_hand, _new_table} = TC.turn(hand_pid, card)
-      {:start_round, round, {:player, _player}, _table} ->
-        [card|_] = wait_turns
-        {_new_hand, _new_table} = TC.turn(hand_pid, card)
+    lc _ inlist Enum.to_list(1..8) do
+      round = case TC.ready(hand_pid) do
+                {:start_round, round, _hand, _table, turns} ->
+                  [card|_] = turns
+                  {_new_hand, _new_table} = TC.turn(hand_pid, card)
+                  round
+                {:start_round, round, {:player, _player}, _table} ->
+                  [card|_] = wait_turns
+                  {_new_hand, _new_table} = TC.turn(hand_pid, card)
+                  round
+              end
+      assert_receive {:round_end, ^round}, 5000
     end
-
-    assert_receive {:round_end, ^round}
-
+    assert_receive {:game_end, {a, b}}, 5000
+    assert a + b == 120
   end
 end

@@ -166,6 +166,7 @@ defmodule Kozel.Table.Server do
     hand = HashDict.fetch!(hands, next_player_token)
 
     available_turns = available_turns(hand, table)
+    Lager.info "Next turn: #{inspect next_player_token} (#{inspect next_pid})"
     :gen_server.cast(next_pid, {:next_turn, round, hand, table, available_turns})
 
     lc {pid, _} inlist HashDict.values(players), pid != next_pid do
@@ -178,6 +179,7 @@ defmodule Kozel.Table.Server do
                                     players_by_token: players,
                                     table: table]=state) do
     {winner, count} = count(table)
+    Lager.info "Round #{round} finished. Winner #{inspect winner} with #{count} points."
     lc {pid, _} inlist HashDict.values(players) do
       :gen_server.cast(pid, {:round_end, round, {:winner, winner}})
     end

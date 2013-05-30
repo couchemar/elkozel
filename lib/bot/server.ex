@@ -42,7 +42,21 @@ defmodule Kozel.Bot.Server do
   defcast next_turn(round, {:player, player}, table),
           export: false,
           state: state do
-    {:noreply, _process_wait(state, round, player, table)}
+    {:noreply, _process_wait state, round, player, table}
+  end
+
+  defcast round_end(round, {:winner, winner}),
+          export: false,
+          state: state do
+    Lager.info "Round #{round} finished. Winner #{winner}"
+    {:noreply, process_round_end state}
+  end
+
+  defcast game_end({:winner_team, winner}, {:points, points}),
+          export: false,
+          state: state do
+    Lager.info "Game finished. Winner team #{winner}. Points #{inspect points}"
+    {:noreply, state}
   end
 
   defp process_ready(BotState[token: token,
@@ -56,12 +70,9 @@ defmodule Kozel.Bot.Server do
   end
 
   defp _process_ready({:start_round, round, {:player, player}, table}, state) do
-    _process_wait(state, round, player, table)
+    _process_wait state, round, player, table
   end
 
-  def get_card([card]) do
-    card
-  end
   def get_card([card|_]) do
     card
   end
@@ -70,13 +81,29 @@ defmodule Kozel.Bot.Server do
                               table_pid: table_pid]=state,
                      round, hand, _table, turns) do
     Lager.info "Round #{round}. My turn"
-    {_new_hand, _new_table} = TS.turn(table_pid, token, get_card(turns), hand)
-    state
+    {new_hand, _new_table} = TS.turn(table_pid, token, get_card(turns), hand)
+    state.hand(new_hand)
   end
 
-  defp _process_wait(state, round, player, table) do
+  defp _process_wait(state, round, player, _table) do
     Lager.info "Round #{round}. Waiting for player #{player} turn"
     state
   end
 
+  defp process_round_end(BotState[hand: hand] = state) do
+    if Enum.count(hand) > 0 do
+      process_ready state
+    else
+      state
+    end
+  end
+
  end
+
+
+
+
+
+
+
+
