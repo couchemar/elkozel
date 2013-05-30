@@ -6,7 +6,7 @@ defmodule Kozel.Bot.Test do
   alias Kozel.Bot.Server, as: BS
   alias Kozel.Table.Test.Client, as: TC
 
-  def wait_turns do
+  defp wait_turns do
     receive do
       {:new_table, _table} ->
         wait_turns
@@ -39,14 +39,15 @@ defmodule Kozel.Bot.Test do
     _hand = TC.get_cards(hand_pid)
 
     case TC.ready(hand_pid) do
-      {:start_round, _round, _hand, _table, turns} ->
+      {:start_round, round, _hand, _table, turns} ->
         [card|_] = turns
         {_new_hand, _new_table} = TC.turn(hand_pid, card)
-      {:start_round, _round, {:player, _player}, _table} ->
-        :ok
+      {:start_round, round, {:player, _player}, _table} ->
+        [card|_] = wait_turns
+        {_new_hand, _new_table} = TC.turn(hand_pid, card)
     end
 
-    turns = wait_turns
+    assert_receive {:round_end, ^round}
 
   end
 end
