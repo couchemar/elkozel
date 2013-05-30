@@ -4,6 +4,15 @@ defmodule TableCase do
   use ExUnit.CaseTemplate
 
   setup do
+    :application.stop(:lager)
+    :application.load(:lager)
+    :application.set_env(:lager, :handlers, [])
+    :application.set_env(
+       :lager, :handlers,
+       [lager_console_backend: [
+           :debug, {:lager_default_formatter, [:time,' [',:severity,'] | ',:pid,' | ',:message,'\n']}]]
+    )
+    :application.start(:lager)
     {:ok, table_pid} = :gen_server.start_link(Kozel.Table.Server, [], [])
     {:ok, table_pid: table_pid}
   end

@@ -53,6 +53,7 @@ defmodule Kozel.Table.Server do
   defcall ready(token), from: from,
                         state: TableState[ready: ready,
                                           players_by_token: players]=state do
+    Lager.info "Got ready request from #{inspect from}"
     state = state.players_by_token(
         if players == nil do
           HashDict.new [{token, from}]
@@ -70,6 +71,7 @@ defmodule Kozel.Table.Server do
   defcall turn(token, card, hand), state: TableState[hands_by_token: hands,
                                                      ids_by_token: ids,
                                                      table: table]=state do
+    Lager.info "Player #{inspect token} turn #{inspect card}. Hand: #{inspect hand}. Table: #{inspect table}"
     case check_hand(card, hand) do
       {:error, error} ->
         {:reply, {:error, error}, state}
@@ -131,6 +133,7 @@ defmodule Kozel.Table.Server do
                                     hands_by_token: hands,
                                     players_by_token: players,
                                     next_move: next_move]=state) do
+    Lager.info "All ready"
     next_player_token = HashDict.fetch!(tokens, next_move)
 
     pid = HashDict.fetch!(players, next_player_token)
@@ -140,6 +143,7 @@ defmodule Kozel.Table.Server do
     available_turns = available_turns(hand, table)
 
     state = state.update_round(&1 + 1)
+    Lager.info "Next turn: #{inspect next_player_token} (#{inspect pid})"
     :gen_server.reply(pid, {:start_round, state.round, hand, table, available_turns})
     lc token inlist List.delete(ready, next_player_token) do
       pid = HashDict.fetch!(players, token)

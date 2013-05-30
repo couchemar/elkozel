@@ -6,6 +6,20 @@ defmodule Kozel.Bot.Test do
   alias Kozel.Bot.Server, as: BS
   alias Kozel.Table.Test.Client, as: TC
 
+  def wait_turns do
+    receive do
+      {:new_table, _table} ->
+        wait_turns
+      {_pid, _hand, _table, turns} ->
+        turns
+      data ->
+        flunk "Unexpected data: #{inspect data}"
+    after
+      5000 ->
+        flunk "Timeout"
+    end
+  end
+
   setup meta do
     table_pid = meta[:table_pid]
 
@@ -21,16 +35,18 @@ defmodule Kozel.Bot.Test do
   test "game", meta do
     hand_pid = meta[:hand_pid]
 
-    token = TC.join(hand_pid)
-    hand = TC.get_cards(hand_pid)
+    _token = TC.join(hand_pid)
+    _hand = TC.get_cards(hand_pid)
 
     case TC.ready(hand_pid) do
-      {:start_round, _round, hand, _table, turns} ->
+      {:start_round, _round, _hand, _table, turns} ->
         [card|_] = turns
         {_new_hand, _new_table} = TC.turn(hand_pid, card)
       {:start_round, _round, {:player, _player}, _table} ->
-        IO.puts "Wait"
+        :ok
     end
+
+    turns = wait_turns
 
   end
 end
