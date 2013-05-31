@@ -11,9 +11,7 @@ defmodule Kozel.Table.Server do
 
   require Lager
 
-  def start_link() do
-    :gen_server.start_link(__MODULE__, [], [])
-  end
+  def start_link(), do: :gen_server.start_link(__MODULE__, [], [])
 
   defrecord TableState, round: 0,
                         decs: [],
@@ -24,7 +22,8 @@ defmodule Kozel.Table.Server do
                         next_move: 0,
                         ready: [],
                         table: [],
-                        points: {0,0}
+                        points: {0,0},
+                        counters: {0,0}
 
   def init([]) do
     Lager.info "Initializing table #{inspect self}"
@@ -88,7 +87,7 @@ defmodule Kozel.Table.Server do
             state = if Enum.count(new_table) < 4 do
                       notify_next_turn(state)
                     else
-                      state |> process_round_end |> process_game_end
+                      state |> process_round_end |> process_play_end |> process_game_end
                     end
             {:reply, {new_hand, new_table}, state}
           else
@@ -180,7 +179,7 @@ defmodule Kozel.Table.Server do
                                     players_by_token: players,
                                     table: table]=state) do
     {winner, count} = count(table)
-    Lager.info "Round #{round} finished. Winner #{inspect winner} with #{count} points."
+    Lager.info "Round #{round} finished. Winner #{inspect winner} earn #{count} points."
     lc {pid, _} inlist HashDict.values(players) do
       :gen_server.cast(pid, {:round_end, round, {:winner, winner}})
     end
@@ -192,31 +191,46 @@ defmodule Kozel.Table.Server do
     state.next_move(winner)
   end
 
-  defp process_game_end(TableState[hands_by_token: hands,
+  defp process_play_end(TableState[hands_by_token: hands,
                                    players_by_token: players,
-                                   points: {p1, p2}=points]=state) do
-    if HashDict.values(hands) == [[],[],[],[]] do
-      winner = cond do
+                                   points: {p1, p2}=points,
+                                   counters: {c1, c2}]=state) do
+    state = if HashDict.values(hands) == [[],[],[],[]] do
+      {winner, state} = cond do
         p1 == p2 ->
-          nil
+          {nil, state}
         p1 > p2 ->
-          1
-        p1 < p2 ->
-          2
+          c_up = if p2 >= 30 do 1 else 2 end
+          {1, state.update_counters(fn({c1, c2}) -> {c1, c2 + c_up} end)}
+        p2 > p1 ->
+          c_up = if p1 >= 30 do 1 else 2 end
+          {2, state.update_counters(fn({c1, c2}) -> {c1 + c_up, c2} end)}
       end
-      Lager.info "Game finished. Winner team #{winner}. Points #{inspect points}"
+      Lager.info "Play finished. Winner team #{winner}. Points #{inspect points}. Counters #{inspect state.counters}"
       lc {pid, _} inlist HashDict.values(players) do
-        :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:points, points}})
+        :gen_server.cast(pid, {:play_end,
+                               {:winner_team, winner}, {:points, points},
+                               {:counters, state.counters}})
       end
+      state
     end
     state
   end
 
-  defp get_next_move(next_move) when next_move == 4 do
-    1
+  defp process_game_end(TableState[hands_by_token: hands,
+                                   players_by_token: players,
+                                   counters: {c1, c2}=counter]=state)
+  when c1 == 6 or c2 == 6 do
+    winner = if c1 > c2 do 2 else 1 end
+    Lager.info "Game finished. Winner team #{winner}. Counter #{inspect counter}"
+    lc {pid, _} inlist HashDict.values(players) do
+      :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:counter, counter}})
+    end
+    state
   end
-  defp get_next_move(next_move) do
-    next_move + 1
-  end
+  defp process_game_end(state), do: state
+
+  defp get_next_move(next_move) when next_move == 4, do: 1
+  defp get_next_move(next_move), do: next_move + 1
 
 end

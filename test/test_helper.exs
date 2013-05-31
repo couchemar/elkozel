@@ -86,9 +86,17 @@ defmodule Kozel.Table.Test.Client do
     {:noreply, state}
   end
 
-  def handle_cast({:game_end, {:winner_team, _winner}, {:points, points}},
+  def handle_cast({:play_end, {:winner_team, _winner},
+                              {:points, points}, {:counters, counters}},
                   ClientState[cast_receiver_pid: receiver]=state) do
-    receiver <- {:game_end, points}
+    receiver <- {:play_end, points, counters}
+    {:noreply, state}
+  end
+
+  def handle_cast({:game_end, {:winner_team, _winner},
+                              {:counters, counters}},
+                  ClientState[cast_receiver_pid: receiver]=state) do
+    receiver <- {:game_end, counters}
     {:noreply, state}
   end
 end

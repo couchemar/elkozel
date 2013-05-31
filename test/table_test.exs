@@ -21,6 +21,9 @@ defmodule Kozel.Table.Test do
         receiver_pid <- {client_pid, hand, table, turns}
       {:start_round, ^expected_round, {:player, _next_move}, table} ->
         receiver_pid <- {:new_table, table}
+      data ->
+        IO.puts expected_round
+        IO.puts "wtf? #{inspect data}"
     end
   end
 
@@ -51,6 +54,17 @@ defmodule Kozel.Table.Test do
       assert Enum.count(new_hand) == 7 - (round - 1)
       assert Enum.count(new_table) == turn + 1
       players
+  end
+
+  defp check_game_end(test) do
+    case test.() do
+      {6, _} ->
+        :ok
+      {_, 6} ->
+        :ok
+      _ ->
+        check_game_end(test)
+    end
   end
 
   test "game", meta do
@@ -89,11 +103,13 @@ defmodule Kozel.Table.Test do
                      |> _check_player.(2) |> _check_player.(3) == []
 
       lc _ inlist Enum.to_list(1..4), do: assert_receive {:round_end, ^r}
+      IO.puts "!!!!"
     end
 
     lc _ inlist Enum.to_list(1..4) do
-      assert_receive {:game_end, {a, b}}
+      assert_receive {:play_end, {a, b}, counters}
       assert a + b == 120
+      counters
     end
 
   end
