@@ -35,7 +35,7 @@ defmodule Kozel.Table.Server do
 
   defcall join, from: from, state: state do
     token = :os.timestamp
-    Lager.info "Player ~p join, got token ~p", [from, token]
+    Lager.info "Player #{inspect from} join, got token #{inspect token}"
     {:reply, token, process_join(token, state)}
   end
 
@@ -98,7 +98,8 @@ defmodule Kozel.Table.Server do
     end
   end
 
-  def handle_call(_msg, _from, state) do
+  def handle_call(msg, from, state) do
+    Lager.warning "Got unexpected message #{inspect msg} from #{inspect from}"
     {:reply, {:error, "dont know what you mean"}, state}
   end
 
@@ -159,7 +160,7 @@ defmodule Kozel.Table.Server do
                                    players_by_token: players,
                                    next_move: next_move,
                                    table: table]=state) do
-
+    Lager.info "Next turn"
     next_player_token = HashDict.fetch!(tokens, next_move)
 
     {next_pid, _} = HashDict.fetch!(players, next_player_token)
@@ -203,6 +204,7 @@ defmodule Kozel.Table.Server do
         p1 < p2 ->
           2
       end
+      Lager.info "Game finished. Winner team #{winner}. Points #{inspect points}"
       lc {pid, _} inlist HashDict.values(players) do
         :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:points, points}})
       end
