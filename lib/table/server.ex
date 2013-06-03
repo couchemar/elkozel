@@ -98,7 +98,7 @@ defmodule Kozel.Table.Server do
   end
 
   def handle_call(msg, from, state) do
-    Lager.warning "Got unexpected message #{inspect msg} from #{inspect from}"
+    Lager.warning "Got unexpected message #{inspect msg} from #{inspect from} state: #{inspect state}"
     {:reply, {:error, "dont know what you mean"}, state}
   end
 
@@ -195,7 +195,7 @@ defmodule Kozel.Table.Server do
                                    players_by_token: players,
                                    points: {p1, p2}=points,
                                    counters: {c1, c2}]=state) do
-    state = if HashDict.values(hands) == [[],[],[],[]] do
+    if HashDict.values(hands) == [[],[],[],[]] do
       {winner, state} = cond do
         p1 == p2 ->
           {nil, state}
@@ -213,8 +213,9 @@ defmodule Kozel.Table.Server do
                                {:counters, state.counters}})
       end
       state
+    else
+      state
     end
-    state
   end
 
   defp process_game_end(TableState[hands_by_token: hands,

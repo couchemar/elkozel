@@ -21,9 +21,6 @@ defmodule Kozel.Table.Test do
         receiver_pid <- {client_pid, hand, table, turns}
       {:start_round, ^expected_round, {:player, _next_move}, table} ->
         receiver_pid <- {:new_table, table}
-      data ->
-        IO.puts expected_round
-        IO.puts "wtf? #{inspect data}"
     end
   end
 
@@ -103,7 +100,6 @@ defmodule Kozel.Table.Test do
                      |> _check_player.(2) |> _check_player.(3) == []
 
       lc _ inlist Enum.to_list(1..4), do: assert_receive {:round_end, ^r}
-      IO.puts "!!!!"
     end
 
     lc _ inlist Enum.to_list(1..4) do
