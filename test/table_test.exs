@@ -24,17 +24,6 @@ defmodule Kozel.Table.Test do
     end
   end
 
-  setup meta do
-    table_pid = meta[:table_pid]
-    {:ok, pid1} = TC.start_link(table_pid, self)
-    {:ok, pid2} = TC.start_link(table_pid, self)
-    {:ok, pid3} = TC.start_link(table_pid, self)
-    {:ok, pid4} = TC.start_link(table_pid, self)
-
-    {:ok, meta ++ [pid1: pid1, pid2: pid2,
-                   pid3: pid3, pid4: pid4]}
-  end
-
   defp check_player(players, round, turn) do
     {player, hand, table, available_turns} = receive_turn()
       lc _ inlist Enum.to_list(1..3), do: assert_receive {:new_table, ^table}
@@ -55,13 +44,22 @@ defmodule Kozel.Table.Test do
 
   defp check_game_end(test) do
     case test.() do
-      {6, _} ->
-        :ok
-      {_, 6} ->
+      {c1, c2} when c1 >= 6 or c2 >= 6 ->
         :ok
       _ ->
         check_game_end(test)
     end
+  end
+
+  setup meta do
+    table_pid = meta[:table_pid]
+    {:ok, pid1} = TC.start_link(table_pid, self)
+    {:ok, pid2} = TC.start_link(table_pid, self)
+    {:ok, pid3} = TC.start_link(table_pid, self)
+    {:ok, pid4} = TC.start_link(table_pid, self)
+
+    {:ok, meta ++ [pid1: pid1, pid2: pid2,
+                   pid3: pid3, pid4: pid4]}
   end
 
   test "game", meta do

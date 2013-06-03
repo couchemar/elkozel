@@ -225,7 +225,7 @@ defmodule Kozel.Table.Server do
   defp process_game_end(TableState[hands_by_token: hands,
                                    players_by_token: players,
                                    counters: {c1, c2}=counters]=state)
-  when c1 == 6 or c2 == 6 do
+  when c1 >= 6 or c2 >= 6 do
     winner = if c1 > c2 do 2 else 1 end
     Lager.info "Game finished. Winner team #{winner}. Counter #{inspect counters}"
     lc {pid, _} inlist HashDict.values(players) do

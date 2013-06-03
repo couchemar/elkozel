@@ -29,8 +29,7 @@ defmodule Kozel.Bot.Server do
     :erlang.cancel_timer(timer)
     token = TS.join(table_pid)
     hand = TS.get_cards(table_pid, token)
-
-    {:noreply, process_ready(state.token(token).hand(hand))}
+    {:noreply, process_ready(state.token(token))}
   end
 
   defcast next_turn(round, hand, table, turns),
@@ -52,24 +51,38 @@ defmodule Kozel.Bot.Server do
     {:noreply, process_round_end state}
   end
 
-  defcast game_end({:winner_team, winner}, {:points, points}),
+  defcast play_end({:winner_team, winner},
+                   {:points, points},
+                   {:counters, counters}),
           export: false,
           state: state do
-    Lager.info "Game finished. Winner team #{winner}. Points #{inspect points}"
+    Lager.info "Play finished. Winner team #{winner}. Points #{inspect points}. Counters #{inspect counters}"
+    case counters do
+      {c1, c2} when c1 == 6 or c2 == 6 ->
+        {:noreply, state}
+      _ ->
+        {:noreply, process_play_end state}
+    end
+  end
+
+  defcast game_end({:winner_team, winner},
+                   {:counters, counters}),
+          export: false,
+          state: state do
+    Lager.info "Game finished. Winner team #{winner}. Counters #{inspect counters}"
     {:noreply, state}
   end
 
   defp process_ready(BotState[token: token,
                               table_pid: table_pid]=state) do
-    _process_ready TS.ready(table_pid, token), state
+    _process_ready state, TS.ready(table_pid, token)
   end
 
-  defp _process_ready({:start_round, round, hand, table, turns},
-                      state) do
+  defp _process_ready(state, {:start_round, round, hand, table, turns}) do
     _process_turn state, round, hand, table, turns
   end
 
-  defp _process_ready({:start_round, round, {:player, player}, table}, state) do
+  defp _process_ready(state, {:start_round, round, {:player, player}, table}) do
     _process_wait state, round, player, table
   end
 
@@ -96,6 +109,12 @@ defmodule Kozel.Bot.Server do
     else
       state
     end
+  end
+
+  defp process_play_end(BotState[hand: hand,
+                                 token: token,
+                                 table_pid: table_pid] = state) do
+    process_ready state.hand(TS.get_cards(table_pid, token))
   end
 
  end

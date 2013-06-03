@@ -20,6 +20,15 @@ defmodule Kozel.Bot.Test do
     end
   end
 
+  defp check_game_end(test) do
+    case test.() do
+      {c1, c2} when c1 >= 6 or c2 >= 6 ->
+        :ok
+      _ ->
+        check_game_end(test)
+    end
+  end
+
   setup meta do
     table_pid = meta[:table_pid]
 
@@ -36,22 +45,29 @@ defmodule Kozel.Bot.Test do
     hand_pid = meta[:hand_pid]
 
     _token = TC.join(hand_pid)
-    _hand = TC.get_cards(hand_pid)
 
-    lc _ inlist Enum.to_list(1..8) do
-      round = case TC.ready(hand_pid) do
-                {:start_round, round, _hand, _table, turns} ->
-                  [card|_] = turns
-                  {_new_hand, _new_table} = TC.turn(hand_pid, card)
-                  round
-                {:start_round, round, {:player, _player}, _table} ->
-                  [card|_] = wait_turns
-                  {_new_hand, _new_table} = TC.turn(hand_pid, card)
-                  round
-              end
-      assert_receive {:round_end, ^round}, 5000
-    end
-    assert_receive {:game_end, {a, b}}, 5000
-    assert a + b == 120
+    _check_play = fn() ->
+                      _hand = TC.get_cards(hand_pid)
+                      lc _ inlist Enum.to_list(1..8) do
+                        round = case TC.ready(hand_pid) do
+                                  {:start_round, round, _hand, _table, turns} ->
+                                    [card|_] = turns
+                                    {_new_hand, _new_table} = TC.turn(hand_pid, card)
+                                    round
+                                  {:start_round, round, {:player, _player}, _table} ->
+                                    [card|_] = wait_turns
+                                    {_new_hand, _new_table} = TC.turn(hand_pid, card)
+                                    round
+                                end
+                        assert_receive {:round_end, ^round}, 5000
+                      end
+                      assert_receive {:play_end, {a, b}, counter}, 5000
+                      assert a + b == 120
+                      counter
+                  end
+
+    check_game_end(_check_play)
+    assert_receive {:game_end, _counters}
+
   end
 end
