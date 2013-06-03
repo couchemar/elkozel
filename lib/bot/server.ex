@@ -28,7 +28,7 @@ defmodule Kozel.Bot.Server do
     Lager.info "Joining to table #{inspect table_pid}"
     :erlang.cancel_timer(timer)
     token = TS.join(table_pid)
-    hand = TS.get_cards(table_pid, token)
+    _hand = TS.get_cards(table_pid, token)
     {:noreply, process_ready(state.token(token))}
   end
 
@@ -111,8 +111,7 @@ defmodule Kozel.Bot.Server do
     end
   end
 
-  defp process_play_end(BotState[hand: hand,
-                                 token: token,
+  defp process_play_end(BotState[token: token,
                                  table_pid: table_pid] = state) do
     process_ready state.hand(TS.get_cards(table_pid, token))
   end

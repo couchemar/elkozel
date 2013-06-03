@@ -37,8 +37,7 @@ defmodule Kozel.Table.Server do
     {:reply, token, process_join(token, state)}
   end
 
-  defcall get_cards(token), state: TableState[decs: [],
-                                              hands_by_token: hands]=state do
+  defcall get_cards(token), state: TableState[decs: []]=state do
     Lager.info "Player #{inspect token} request cards"
     {h1, h2, h3, h4} = deal(produce_cards)
     {:reply, h1,
@@ -197,8 +196,7 @@ defmodule Kozel.Table.Server do
 
   defp process_play_end(TableState[hands_by_token: hands,
                                    players_by_token: players,
-                                   points: {p1, p2}=points,
-                                   counters: {c1, c2}]=state) do
+                                   points: {p1, p2}=points]=state) do
     if HashDict.values(hands) == [[],[],[],[]] do
       {winner, state} = cond do
         p1 == p2 ->
@@ -222,8 +220,7 @@ defmodule Kozel.Table.Server do
     end
   end
 
-  defp process_game_end(TableState[hands_by_token: hands,
-                                   players_by_token: players,
+  defp process_game_end(TableState[players_by_token: players,
                                    counters: {c1, c2}=counters]=state)
   when c1 >= 6 or c2 >= 6 do
     winner = if c1 > c2 do 2 else 1 end
