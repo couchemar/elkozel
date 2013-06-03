@@ -28,8 +28,7 @@ defmodule Kozel.Table.Server do
   def init([]) do
     Lager.info "Initializing table #{inspect self}"
     :random.seed(:os.timestamp)
-    {h1, h2, h3, h4} = deal(produce_cards)
-    {:ok, TableState.new(decs: [h1, h2, h3, h4])}
+    {:ok, TableState.new()}
   end
 
   defcall join, from: from, state: state do
@@ -38,15 +37,20 @@ defmodule Kozel.Table.Server do
     {:reply, token, process_join(token, state)}
   end
 
+  defcall get_cards(token), state: TableState[decs: [],
+                                              hands_by_token: hands]=state do
+    Lager.info "Player #{inspect token} request cards"
+    {h1, h2, h3, h4} = deal(produce_cards)
+    {:reply, h1,
+     state.hands_by_token(HashDict.new [{token, h1}])
+          .decs([h2, h3, h4])}
+  end
+
   defcall get_cards(token), state: TableState[decs: [d|new_decs],
                                               hands_by_token: hands]=state do
     Lager.info "Player #{inspect token} request cards"
     {:reply, d,
-     state.hands_by_token(if hands == nil do
-                            HashDict.new [{token, d}]
-                          else
-                            HashDict.put hands, token, d
-                          end).decs(new_decs)}
+     state.hands_by_token(HashDict.put hands, token, d).decs(new_decs)}
   end
 
   defcall ready(token), from: from,
@@ -212,7 +216,7 @@ defmodule Kozel.Table.Server do
                                {:winner_team, winner}, {:points, points},
                                {:counters, state.counters}})
       end
-      state
+      state.round(0).points({0, 0})
     else
       state
     end
@@ -220,12 +224,12 @@ defmodule Kozel.Table.Server do
 
   defp process_game_end(TableState[hands_by_token: hands,
                                    players_by_token: players,
-                                   counters: {c1, c2}=counter]=state)
+                                   counters: {c1, c2}=counters]=state)
   when c1 == 6 or c2 == 6 do
     winner = if c1 > c2 do 2 else 1 end
-    Lager.info "Game finished. Winner team #{winner}. Counter #{inspect counter}"
+    Lager.info "Game finished. Winner team #{winner}. Counter #{inspect counters}"
     lc {pid, _} inlist HashDict.values(players) do
-      :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:counter, counter}})
+      :gen_server.cast(pid, {:game_end, {:winner_team, winner}, {:counters, counters}})
     end
     state
   end

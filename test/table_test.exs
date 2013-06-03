@@ -77,36 +77,43 @@ defmodule Kozel.Table.Test do
 
     assert Enum.count(Enum.uniq([token1, token2, token3, token4])) == 4
 
-    hand1 = TC.get_cards(pid1)
-    hand2 = TC.get_cards(pid2)
-    hand3 = TC.get_cards(pid3)
-    hand4 = TC.get_cards(pid4)
-
-    assert Enum.count(hand1) == 8
-    assert Enum.count(hand2) == 8
-    assert Enum.count(hand3) == 8
-    assert Enum.count(hand4) == 8
-
     self_pid = self
 
-    lc r inlist Enum.to_list(1..8) do
-      players = [pid1, pid2, pid3, pid4]
+    _check_play = fn() ->
+                      hand1 = TC.get_cards(pid1)
+                      hand2 = TC.get_cards(pid2)
+                      hand3 = TC.get_cards(pid3)
+                      hand4 = TC.get_cards(pid4)
 
-      lc pid inlist players, do: Process.spawn(fn() -> spawn_ready(self_pid, pid, r) end)
+                      assert Enum.count(hand1) == 8
+                      assert Enum.count(hand2) == 8
+                      assert Enum.count(hand3) == 8
+                      assert Enum.count(hand4) == 8
 
-      _check_player = check_player(&1, r, &2)
+                      lc r inlist Enum.to_list(1..8) do
+                        players = [pid1, pid2, pid3, pid4]
 
-      assert players |> _check_player.(0) |> _check_player.(1)
-                     |> _check_player.(2) |> _check_player.(3) == []
+                        lc pid inlist players, do: Process.spawn(fn() -> spawn_ready(self_pid, pid, r) end)
 
-      lc _ inlist Enum.to_list(1..4), do: assert_receive {:round_end, ^r}
-    end
+                        _check_player = check_player(&1, r, &2)
 
-    lc _ inlist Enum.to_list(1..4) do
-      assert_receive {:play_end, {a, b}, counters}
-      assert a + b == 120
-      counters
-    end
+                        assert players |> _check_player.(0) |> _check_player.(1)
+                        |> _check_player.(2) |> _check_player.(3) == []
+
+                        lc _ inlist Enum.to_list(1..4), do: assert_receive {:round_end, ^r}
+                      end
+
+                      counters = lc _ inlist Enum.to_list(1..4) do
+                        assert_receive {:play_end, {a, b}, counters}
+                        assert a + b == 120
+                        counters
+                      end
+                     [counter|_] = counters
+                     counter
+                  end
+
+    check_game_end(_check_play)
+    assert_receive {:game_end, _counters}
 
   end
 end
