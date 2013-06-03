@@ -117,11 +117,3 @@ defmodule Kozel.Bot.Server do
   end
 
  end
-
-
-
-
-
-
-
-
