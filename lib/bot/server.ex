@@ -7,7 +7,7 @@ defmodule Kozel.Bot.Server do
   require Lager
 
   def start_link(table_pid) do
-    :gen_server.start_link(__MODULE__, [table_pid], [])
+    :gen_server.start_link(__MODULE__, table_pid, [])
   end
 
   defrecord BotState, table_pid: nil,
@@ -15,7 +15,7 @@ defmodule Kozel.Bot.Server do
                       token: nil,
                       hand: nil
 
-  def init([table_pid]) do
+  def init(table_pid) do
     Lager.info "Initializing bot #{inspect self}"
     timer = :erlang.send_after(0, self(), :do_init)
     {:ok, BotState.new(table_pid: table_pid,
