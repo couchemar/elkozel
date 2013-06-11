@@ -13,15 +13,24 @@ defmodule Elkozel.Mixfile do
   def application do
     [ registered: [ :kozel_table_sup ],
       mod: {Elkozel, []},
-      applications: [ :exlager ] ]
+      applications: [ :exlager,
+                      :ranch,
+                      :cowboy ] ++ env_applications(Mix.env) ]
   end
+
+  def env_applications(:dev), do: [:exreloader]
+  def env_applications(_), do: []
 
   # Returns the list of dependencies in the format:
   # { :foobar, "0.1", git: "https://github.com/elixir-lang/foobar.git" }
   defp deps do
     [ {:genx, "0.1", github: "yrashk/genx"},
       {:exlager, github: "khia/exlager"},
-          {:goldrush, github: "DeadZen/goldrush", tag: "879c69874a"} ]
+          {:goldrush, github: "DeadZen/goldrush", tag: "879c69874a"},
+      {:exreloader, github: "couchemar/exreloader"},
+      {:cowboy, github: "extend/cowboy", tag: "0.8.5"},
+          {:ranch, github: "extend/ranch", tag: "0.8.3"},
+      {:mimetypes,   github: "spawngrid/mimetypes"} ]
  end
 
   defp options(env) when env in [:dev, :test] do

@@ -1,4 +1,8 @@
-[ "exlager": {:git,"https://github.com/khia/exlager.git","f8dd0715d7668290d7d02a4517acfee4e8be885c",[]},
+[ "cowboy": {:git,"https://github.com/extend/cowboy.git","bfbe1cc5c60471efe3e840f5658957ace0269dbd",[tag: "0.8.5"]},
+  "exlager": {:git,"https://github.com/khia/exlager.git","f8dd0715d7668290d7d02a4517acfee4e8be885c",[]},
+  "exreloader": {:git,"https://github.com/couchemar/exreloader.git","403ae8618cd51e39a73d3d7867a5c3936c61934f",[]},
   "genx": {:git,"https://github.com/yrashk/genx.git","c0aec75a29edb8cb9bfc9af37b2f6d3c4b405f39",[]},
   "goldrush": {:git,"https://github.com/DeadZen/goldrush.git","879c69874a555b2c13498aa4a3da6f6bbbb6a031",[tag: "879c69874a"]},
-  "lager": {:git,"https://github.com/basho/lager.git","dc23b34ad40de2473c36d1a2bfeca4910279cc3f",[]} ]
+  "lager": {:git,"https://github.com/basho/lager.git","dc23b34ad40de2473c36d1a2bfeca4910279cc3f",[]},
+  "mimetypes": {:git,"https://github.com/spawngrid/mimetypes.git","507823a0e6a5f6654c61945152a7ba88bd55ad0e",[]},
+  "ranch": {:git,"https://github.com/extend/ranch.git","53be20d25f94095ec9b44c5bd03cf158dd5a6820",[tag: "0.8.3"]} ]
