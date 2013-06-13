@@ -3,7 +3,21 @@
   <head>
     <meta charset="utf-8">
     <title>Kozel</title>
+
+    <link rel="stylesheet" href="static/vendor/css/foundation.min.css" type="text/css">
+    <link rel="stylesheet" href="static/vendor/css/normalize.css" type="text/css">
+
   </head>
   <body>
+    <div>
+      <div>
+        <p>Столы:</p>
+        {{number}} {{joined}}/4 <button class="tiny button">Присоединиться</button>
+      </div>
+      <button>Создать</button>
+
+
+      <script type="text/javascript" src="static/vendor/js/angular.min.js"></script>
+    </div>
   </body>
 </html>
