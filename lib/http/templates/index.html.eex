@@ -1,23 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="KozelApp">
   <head>
     <meta charset="utf-8">
     <title>Kozel</title>
 
     <link rel="stylesheet" href="static/vendor/css/foundation.min.css" type="text/css">
     <link rel="stylesheet" href="static/vendor/css/normalize.css" type="text/css">
-
   </head>
   <body>
     <div>
-      <div>
+      <div ng-controller="RoomsController as RoomsCtrl">
         <p>Столы:</p>
-        {{number}} {{joined}}/4 <button class="tiny button">Присоединиться</button>
+        <ul>
+          <li ng-repeat="room in rooms">
+            {{$index + 1}}. {{room.joined}}/4 <button class="tiny button">Присоединиться</button>
+          </li>
+        </ul>
       </div>
       <button>Создать</button>
 
 
       <script type="text/javascript" src="static/vendor/js/angular.min.js"></script>
+      <script type="text/javascript" src="static/vendor/js/angular-resource.min.js"></script>
+      <script type="text/javascript" src="static/vendor/js/restangular.min.js"></script>
+      <script type="text/javascript" src="static/vendor/js/underscore-min.js"></script>
+
+      <script type="text/javascript" src="static/js/app.js"></script>
     </div>
   </body>
 </html>

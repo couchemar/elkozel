@@ -3,6 +3,7 @@
   "exreloader": {:git,"https://github.com/couchemar/exreloader.git","9c03c8e83d3f9533eaed781f3ce7f6af514ad8f5",[]},
   "genx": {:git,"https://github.com/yrashk/genx.git","c0aec75a29edb8cb9bfc9af37b2f6d3c4b405f39",[]},
   "goldrush": {:git,"https://github.com/DeadZen/goldrush.git","879c69874a555b2c13498aa4a3da6f6bbbb6a031",[tag: "879c69874a"]},
+  "jsonx": {:git,"https://github.com/iskra/jsonx.git","031ee2d8a71cd2dd4c742dda25a4d8690c73db47",[]},
   "lager": {:git,"https://github.com/basho/lager.git","dc23b34ad40de2473c36d1a2bfeca4910279cc3f",[]},
   "mimetypes": {:git,"https://github.com/spawngrid/mimetypes.git","507823a0e6a5f6654c61945152a7ba88bd55ad0e",[]},
   "ranch": {:git,"https://github.com/extend/ranch.git","53be20d25f94095ec9b44c5bd03cf158dd5a6820",[tag: "0.8.3"]} ]

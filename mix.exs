@@ -30,7 +30,8 @@ defmodule Elkozel.Mixfile do
       {:exreloader, github: "couchemar/exreloader"},
       {:cowboy, github: "extend/cowboy", tag: "0.8.5"},
           {:ranch, github: "extend/ranch", tag: "0.8.3"},
-      {:mimetypes,   github: "spawngrid/mimetypes"} ]
+      {:mimetypes, github: "spawngrid/mimetypes"},
+      {:jsonx, github: "iskra/jsonx"} ]
  end
 
   defp options(env) when env in [:dev, :test] do
