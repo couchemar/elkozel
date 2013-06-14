@@ -1,5 +1,5 @@
 start-dev:
 	@iex --erl "-config dev.config" -S mix
 
-deps:
+get-deps:
 	@mix deps.get

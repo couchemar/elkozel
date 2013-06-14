@@ -24,8 +24,8 @@ defmodule Elkozel.HTTP.Rooms do
   end
 
   def from_json(req, state) do
-    %% create table here
-    {true, req, state}
+    
+    {{true, "rooms"}, req, state}
   end
 
 end

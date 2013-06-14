@@ -7,7 +7,11 @@ angular.module('KozelApp', ['restangular'])
     $scope.rooms = roomsList.getList();
 
     this.createRoom = function() {
-        roomsList.post();
+        roomsList.post().then(function(data) {
+            $scope.$apply(function() {
+                $scope.rooms = data;
+            });
+        });
     };
 
 });

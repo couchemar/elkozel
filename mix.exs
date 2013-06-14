@@ -31,7 +31,8 @@ defmodule Elkozel.Mixfile do
       {:cowboy, github: "extend/cowboy", tag: "0.8.5"},
           {:ranch, github: "extend/ranch", tag: "0.8.3"},
       {:mimetypes, github: "spawngrid/mimetypes"},
-      {:jsonx, github: "iskra/jsonx"} ]
+      {:jsonx, github: "iskra/jsonx"},
+      {:gproc, github: "uwiger/gproc"} ]
  end
 
   defp options(env) when env in [:dev, :test] do
