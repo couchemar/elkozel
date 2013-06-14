@@ -5,4 +5,9 @@ angular.module('KozelApp', ['restangular'])
 .controller('RoomsController', function($scope, Restangular) {
     var roomsList = Restangular.all('rooms');
     $scope.rooms = roomsList.getList();
+
+    this.createRoom = function() {
+        roomsList.post();
+    };
+
 });

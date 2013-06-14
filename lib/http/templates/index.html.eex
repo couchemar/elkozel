@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="static/vendor/css/normalize.css" type="text/css">
   </head>
   <body>
-    <div>
-      <div ng-controller="RoomsController as RoomsCtrl">
+    <div ng-controller="RoomsController as roomsCtrl">
+      <div>
         <p>Столы:</p>
         <ul>
           <li ng-repeat="room in rooms">
@@ -17,15 +17,13 @@
           </li>
         </ul>
       </div>
-      <button>Создать</button>
-
-
-      <script type="text/javascript" src="static/vendor/js/angular.min.js"></script>
-      <script type="text/javascript" src="static/vendor/js/angular-resource.min.js"></script>
-      <script type="text/javascript" src="static/vendor/js/restangular.min.js"></script>
-      <script type="text/javascript" src="static/vendor/js/underscore-min.js"></script>
-
-      <script type="text/javascript" src="static/js/app.js"></script>
+      <button ng-click="roomsCtrl.createRoom()">Создать</button>
     </div>
+    <script type="text/javascript" src="static/vendor/js/angular.min.js"></script>
+    <script type="text/javascript" src="static/vendor/js/angular-resource.min.js"></script>
+    <script type="text/javascript" src="static/vendor/js/restangular.min.js"></script>
+    <script type="text/javascript" src="static/vendor/js/underscore-min.js"></script>
+
+    <script type="text/javascript" src="static/js/app.js"></script>
   </body>
 </html>
