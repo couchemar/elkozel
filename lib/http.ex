@@ -3,6 +3,7 @@ defmodule Kozel.HTTP do
     dispatch = [
       {:_, [
         {"/", Kozel.HTTP.Page, []},
+        {"/template/[:page]", Kozel.HTTP.Page, []},
         {"/api/rooms", Kozel.HTTP.Rooms, []},
         {"/static/[...]", :cowboy_static, static}
       ]}

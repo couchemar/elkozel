@@ -1,0 +1,9 @@
+<div>
+  <p>Столы:</p>
+  <ul>
+    <li ng-repeat="room in rooms">
+      {{$index + 1}}. {{room.joined}}/4 <button class="tiny button">Присоединиться</button>
+    </li>
+  </ul>
+</div>
+<button ng-click="createRoom()">Создать</button>

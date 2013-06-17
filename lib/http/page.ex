@@ -9,6 +9,11 @@ defmodule Kozel.HTTP.Page do
     handle_path(path, req, state)
   end
 
+  def handle_path("/template/rooms", req, state) do
+    {:ok, req} = :cowboy_req.reply(200, [{"content-type","text/html"}],
+                                   rooms_page([]), req)
+    {:ok, req, state}
+  end
   def handle_path(_, req, state) do
     {:ok, req} = :cowboy_req.reply(200, [{"content-type","text/html"}],
                                    index_page([]), req)
@@ -21,5 +26,8 @@ defmodule Kozel.HTTP.Page do
 
   EEx.function_from_file :defp, :index_page,
                          Path.expand("../templates/index.html.eex", __FILE__),
+                         [:_assigns]
+  EEx.function_from_file :defp, :rooms_page,
+                         Path.expand("../templates/rooms.html.eex", __FILE__),
                          [:_assigns]
 end
