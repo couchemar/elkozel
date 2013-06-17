@@ -1,4 +1,5 @@
-defmodule Elkozel.HTTP.Rooms do
+defmodule Kozel.HTTP.Rooms do
+  alias Kozel.Table.Supervisor, as: TS
 
   def init(_transport, _req, []) do
     {:upgrade, :protocol, :cowboy_rest}
@@ -17,15 +18,17 @@ defmodule Elkozel.HTTP.Rooms do
   end
 
   def to_json(req, state) do
-    json = [[joined: 1],
-            [joined: 2],
-            [joined: 3]]
+    tables = :gproc.select([{{:'$1', :'_', :'$2'},
+                             [{:'<', :'$2', 5}],
+                             [[:'$1', :'$2']]}])
+
+    json = lc [{_, _, name}, joined] inlist tables, do: [name: name, joined: joined]
     {:jsonx.encode(json), req, state}
   end
 
   def from_json(req, state) do
-    
-    {{true, "rooms"}, req, state}
+    {:ok, _pid} = TS.start_table()
+    {true, req, state}
   end
 
 end

@@ -15,7 +15,8 @@ defmodule Elkozel.Mixfile do
       mod: {Elkozel, []},
       applications: [ :exlager,
                       :ranch,
-                      :cowboy ] ++ env_applications(Mix.env) ]
+                      :cowboy,
+                      :gproc ] ++ env_applications(Mix.env) ]
   end
 
   def env_applications(:dev), do: [:exreloader]

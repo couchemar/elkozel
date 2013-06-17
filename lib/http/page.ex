@@ -1,4 +1,4 @@
-defmodule Elkozel.HTTP.Page do
+defmodule Kozel.HTTP.Page do
 
   def init(_transport, req, []) do
     {:ok, req, nil}

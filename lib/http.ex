@@ -1,9 +1,9 @@
-defmodule Elkozel.HTTP do
+defmodule Kozel.HTTP do
   def start do
     dispatch = [
       {:_, [
-        {"/", Elkozel.HTTP.Page, []},
-        {"/api/rooms", Elkozel.HTTP.Rooms, []},
+        {"/", Kozel.HTTP.Page, []},
+        {"/api/rooms", Kozel.HTTP.Rooms, []},
         {"/static/[...]", :cowboy_static, static}
       ]}
     ] |> :cowboy_router.compile

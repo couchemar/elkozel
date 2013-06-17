@@ -13,7 +13,8 @@ defmodule Kozel.Table.Server do
 
   def start_link(), do: :gen_server.start_link(__MODULE__, [], [])
 
-  defrecord TableState, round: 0,
+  defrecord TableState, name: nil,
+                        round: 0,
                         decs: [],
                         players_by_token: nil,
                         ids_by_token: nil,
@@ -28,7 +29,10 @@ defmodule Kozel.Table.Server do
   def init([]) do
     Lager.info "Initializing table #{inspect self}"
     :random.seed(:os.timestamp)
-    {:ok, TableState.new()}
+    name = :os.timestamp |> term_to_binary |> :base64.encode
+    :gproc.reg({:n, :l, {:table, name}})
+    :gproc.add_local_counter(name, 0)
+    {:ok, TableState.new(name: name)}
   end
 
   defcall join, from: from, state: state do
@@ -107,8 +111,12 @@ defmodule Kozel.Table.Server do
 
   # Private
 
-  defp process_join(token, TableState[ids_by_token: ids,
+  defp process_join(token, TableState[name: name,
+                                      ids_by_token: ids,
                                       tokens_by_id: tokens]=state) do
+
+    :gproc.update_counter({:c, :l, name}, 1)
+
     if ids == nil do
       id = 1
       ids = HashDict.new [{token, id}]
