@@ -1,0 +1,9 @@
+<div>
+  <p>Игроки:</p>
+  <ul>
+    <li ng-repeat="player in players">
+      {{$index + 1}}
+    </li>
+  </ul>
+</div>
+<button ng-click="addBot()">Добавить бота</button>

@@ -5,6 +5,7 @@ defmodule Kozel.HTTP do
         {"/", Kozel.HTTP.Page, []},
         {"/template/[:page]", Kozel.HTTP.Page, []},
         {"/api/rooms", Kozel.HTTP.Rooms, []},
+        {"/api/rooms/[:room]/bots", Kozel.HTTP.RoomBots, []},
         {"/static/[...]", :cowboy_static, static}
       ]}
     ] |> :cowboy_router.compile
