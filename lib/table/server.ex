@@ -28,8 +28,9 @@ defmodule Kozel.Table.Server do
 
   def init([]) do
     Lager.info "Initializing table #{inspect self}"
-    :random.seed(:os.timestamp)
-    name = :os.timestamp |> term_to_binary |> :base64.encode
+    time = :os.timestamp
+    :random.seed(time)
+    name = time |> term_to_binary |> :base16.encode
     :gproc.reg({:n, :l, {:table, name}})
     :gproc.add_local_counter(name, 0)
     {:ok, TableState.new(name: name)}

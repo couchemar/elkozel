@@ -1,4 +1,5 @@
-[ "cowboy": {:git,"https://github.com/extend/cowboy.git","bfbe1cc5c60471efe3e840f5658957ace0269dbd",[tag: "0.8.5"]},
+[ "base16": {:git,"https://github.com/goj/base16.git","ec420aa4ce0fb971f155274c606e00188a2ed37d",[]},
+  "cowboy": {:git,"https://github.com/extend/cowboy.git","bfbe1cc5c60471efe3e840f5658957ace0269dbd",[tag: "0.8.5"]},
   "exlager": {:git,"https://github.com/khia/exlager.git","f8dd0715d7668290d7d02a4517acfee4e8be885c",[]},
   "exreloader": {:git,"https://github.com/couchemar/exreloader.git","9c03c8e83d3f9533eaed781f3ce7f6af514ad8f5",[]},
   "genx": {:git,"https://github.com/yrashk/genx.git","c0aec75a29edb8cb9bfc9af37b2f6d3c4b405f39",[]},
