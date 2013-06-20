@@ -1,4 +1,4 @@
-defmodule Elkozel.Mixfile do
+defmodule Kozel.Mixfile do
   use Mix.Project
 
   def project do
@@ -9,10 +9,11 @@ defmodule Elkozel.Mixfile do
       elixirc_options: project_options ++ options(Mix.env) ]
   end
 
-  # Configuration for the OTP application
   def application do
-    [ registered: [ :kozel_table_sup ],
-      mod: {Elkozel, []},
+    [ registered: [ :kozel_sup,
+                    :kozel_table_sup,
+                    :kozel_bot_sup ],
+      mod: {Kozel, []},
       applications: [ :exlager,
                       :ranch,
                       :cowboy,
@@ -22,8 +23,6 @@ defmodule Elkozel.Mixfile do
   def env_applications(:dev), do: [:exreloader]
   def env_applications(_), do: []
 
-  # Returns the list of dependencies in the format:
-  # { :foobar, "0.1", git: "https://github.com/elixir-lang/foobar.git" }
   defp deps do
     [ {:genx, "0.1", github: "yrashk/genx"},
       {:exlager, github: "khia/exlager"},
