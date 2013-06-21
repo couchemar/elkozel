@@ -21,6 +21,11 @@ defmodule Kozel.HTTP.RoomBots do
   end
 
   def from_json(req, state) do
+    {:ok, body, req} = :cowboy_req.body(req)
+    body = :jsonx.decode body, format: :proplist
+    room = ListDict.get body, "room"
+    table = :gproc.lookup_local_name {:table, room}
+    Kozel.Bot.Supervisor.start_bot(table)
     {true, req, state}
   end
 

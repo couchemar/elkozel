@@ -27,6 +27,6 @@ angular.module('KozelApp', ['restangular'])
                                        Restangular) {
     var room = Restangular.one('rooms', $routeParams.roomName);
     $scope.addBot = function() {
-        room.all('bots').post();
+        room.all('bots').post({room: $routeParams.roomName});
     };
 });

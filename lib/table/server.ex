@@ -57,7 +57,8 @@ defmodule Kozel.Table.Server do
      state.hands_by_token(HashDict.put hands, token, d).decs(new_decs)}
   end
 
-  defcall ready(token), from: from,
+  defcall ready(token), export: [timeout: :infinity],
+                        from: from,
                         state: TableState[ready: ready,
                                           players_by_token: players]=state do
     Lager.info "Got ready request from #{inspect from}"
@@ -115,7 +116,6 @@ defmodule Kozel.Table.Server do
   defp process_join(token, TableState[name: name,
                                       ids_by_token: ids,
                                       tokens_by_id: tokens]=state) do
-
     :gproc.update_counter({:c, :l, name}, 1)
 
     if ids == nil do
