@@ -29,7 +29,7 @@ defmodule Kozel.Bot.Server do
     :erlang.cancel_timer(timer)
     token = TS.join(table_pid)
 
-    :gproc.add_local_property({:players, table_pid}, {:bot, token})
+    :gproc.add_local_property {:players, table_pid}, {:bot, token}
 
     _hand = TS.get_cards(table_pid, token)
     {:noreply, process_ready(state.token(token))}

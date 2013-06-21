@@ -6,6 +6,7 @@ defmodule Kozel.HTTP do
         {"/template/[:page]", Kozel.HTTP.Page, []},
         {"/api/rooms", Kozel.HTTP.Rooms, []},
         {"/api/rooms/[:room]/bots", Kozel.HTTP.RoomBots, []},
+        {"/api/rooms/[:room]/players", Kozel.HTTP.RoomPlayers, []},
         {"/static/[...]", :cowboy_static, static}
       ]}
     ] |> :cowboy_router.compile

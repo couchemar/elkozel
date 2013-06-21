@@ -26,7 +26,12 @@ angular.module('KozelApp', ['restangular'])
 .controller('RoomController', function($scope, $routeParams,
                                        Restangular) {
     var room = Restangular.one('rooms', $routeParams.roomName);
+    $scope.players = room.all("players").getList();
+
     $scope.addBot = function() {
-        room.all('bots').post({room: $routeParams.roomName});
+        room.all('bots').post({room: $routeParams.roomName})
+        .then(function() {
+            $scope.players = room.all("players").getList();
+        });
     };
 });
