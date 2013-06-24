@@ -24,16 +24,16 @@ defmodule Kozel.Mixfile do
   def env_applications(_), do: []
 
   defp deps do
-    [ {:genx, "0.1", github: "yrashk/genx"},
-      {:exlager, github: "khia/exlager"},
-          {:goldrush, github: "DeadZen/goldrush", tag: "879c69874a"},
-      {:exreloader, github: "couchemar/exreloader"},
-      {:cowboy, github: "extend/cowboy", tag: "0.8.5"},
-          {:ranch, github: "extend/ranch", tag: "0.8.3"},
-      {:mimetypes, github: "spawngrid/mimetypes"},
-      {:jsonx, github: "iskra/jsonx"},
-      {:gproc, github: "uwiger/gproc"},
-      {:base16, github: "goj/base16"} ]
+    [ {:genx, "0.1", git: "https://github.com/yrashk/genx.git"},
+      {:exlager, git: "https://github.com/khia/exlager.git"},
+          {:goldrush, git: "https://github.com/DeadZen/goldrush.git", tag: "879c69874a"},
+      {:exreloader, git: "https://github.com/couchemar/exreloader.git"},
+      {:cowboy, git: "https://github.com/extend/cowboy.git", tag: "0.8.5"},
+          {:ranch, git: "https://github.com/extend/ranch.git", tag: "0.8.3"},
+      {:mimetypes, git: "https://github.com/spawngrid/mimetypes.git"},
+      {:jsonx, git: "https://github.com/iskra/jsonx.git"},
+      {:gproc, git: "https://github.com/uwiger/gproc.git"},
+      {:base16, git: "https://github.com/goj/base16.git"} ]
  end
 
   defp options(env) when env in [:dev, :test] do
