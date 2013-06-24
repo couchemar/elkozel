@@ -12,7 +12,15 @@ defmodule Kozel.HTTP.RoomBots do
     {room, req} = :cowboy_req.binding(:room, req)
     case :gproc.lookup_local_name({:table, room}) do
       :undefined -> {true, req, state}
-      _pid -> {false, req, state}
+      pid -> {false, req, {room, pid}}
+    end
+  end
+
+  def forbidden(req, {_room, table_pid}=state) do
+    if Kozel.Bot.Sentinel.max_bots?(table_pid) do
+      {true, req, state}
+    else
+      {false, req, state}
     end
   end
 
@@ -20,15 +28,10 @@ defmodule Kozel.HTTP.RoomBots do
     {[{{"application", "json", :"*"}, :from_json}], req, state}
   end
 
-  def from_json(req, state) do
-    {:ok, body, req} = :cowboy_req.body(req)
-    body = :jsonx.decode body, format: :proplist
-    room = ListDict.get body, "room"
-    table = :gproc.lookup_local_name {:table, room}
-    case Kozel.Bot.Sentinel.start_bot(table) do
+  def from_json(req, {_room, table_pid}=state) do
+    case Kozel.Bot.Sentinel.start_bot(table_pid) do
       {:ok, _pid} -> {true, req, state}
       {:error, _error} -> {false, req, state}
     end
   end
-
 end

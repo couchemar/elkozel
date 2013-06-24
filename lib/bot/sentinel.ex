@@ -27,4 +27,15 @@ defmodule Kozel.Bot.Sentinel do
           {:reply, {:error, :bots_limit}, state}
     end
   end
+
+  defcall max_bots?(table_pid), export: :kozel_bot_sentinel,
+                                state: state do
+    result = case :gproc.lookup_local_counters({:bots, table_pid}) do
+      [{_, bots_count}] when bots_count >= @max_bots ->
+        true
+      _ ->
+        false
+    end
+    {:reply, result, state}
+  end
 end

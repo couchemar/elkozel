@@ -3,7 +3,7 @@ Code.require_file "../test_helper.exs", __FILE__
 defmodule Kozel.Bot.Test do
   use TableCase, async: true
 
-  alias Kozel.Bot.Server, as: BS
+  alias Kozel.Bot.Worker, as: BW
   alias Kozel.Table.Test.Client, as: TC
 
   defp wait_turns do
@@ -32,9 +32,9 @@ defmodule Kozel.Bot.Test do
   setup meta do
     table_pid = meta[:table_pid]
 
-    {:ok, bot_pid1} = BS.start_link(table_pid)
-    {:ok, bot_pid2} = BS.start_link(table_pid)
-    {:ok, bot_pid3} = BS.start_link(table_pid)
+    {:ok, bot_pid1} = BW.start_link(table_pid)
+    {:ok, bot_pid2} = BW.start_link(table_pid)
+    {:ok, bot_pid3} = BW.start_link(table_pid)
     {:ok, hand_pid} = TC.start_link(table_pid, self)
 
     {:ok, meta ++ [bot_pid1: bot_pid1, bot_pid2: bot_pid2,

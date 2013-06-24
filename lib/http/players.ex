@@ -28,5 +28,4 @@ defmodule Kozel.HTTP.RoomPlayers do
     json = lc {_, {type, _}} inlist players, do: [type: type]
     {:jsonx.encode(json), req, room}
   end
-
 end
