@@ -25,8 +25,10 @@ defmodule Kozel.HTTP.RoomBots do
     body = :jsonx.decode body, format: :proplist
     room = ListDict.get body, "room"
     table = :gproc.lookup_local_name {:table, room}
-    Kozel.Bot.Supervisor.start_bot(table)
-    {true, req, state}
+    case Kozel.Bot.Sentinel.start_bot(table) do
+      {:ok, _pid} -> {true, req, state}
+      {:error, _error} -> {false, req, state}
+    end
   end
 
 end

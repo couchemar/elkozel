@@ -1,4 +1,4 @@
-defmodule Kozel.Bot.Server do
+defmodule Kozel.Bot.Worker do
   import GenX.GenServer
   use GenServer.Behaviour
 

@@ -10,8 +10,7 @@ defmodule Kozel.Bot.Supervisor do
   end
 
   def init([]) do
-    children = [ worker(Kozel.Bot.Server, []) ]
+    children = [ worker(Kozel.Bot.Worker, []) ]
     supervise children, strategy: :simple_one_for_one
   end
-
 end

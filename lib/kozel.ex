@@ -12,6 +12,8 @@ defmodule Kozel.Supervisor do
   defp children() do
     [
      supervisor(Kozel.Table.Supervisor, []),
+     # TODO: move to separated sup.
+     worker(Kozel.Bot.Sentinel, []),
      supervisor(Kozel.Bot.Supervisor, [])
     ]
   end
