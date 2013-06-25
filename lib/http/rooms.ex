@@ -4,7 +4,6 @@ defmodule Kozel.HTTP.Rooms do
   require Lager
 
   def init(_transport, _req, []) do
-    IO.puts "init"
     {:upgrade, :protocol, :cowboy_rest}
   end
 
@@ -26,7 +25,6 @@ defmodule Kozel.HTTP.Rooms do
                              [[:'$1', :'$2']]}])
 
     json = lc [{_, _, {:joined, name}}, joined] inlist tables, do: [name: name, joined: joined]
-    Lager.info "#{inspect json}"
     {:jsonx.encode(json), req, state}
   end
 
