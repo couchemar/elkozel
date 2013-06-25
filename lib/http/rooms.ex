@@ -1,7 +1,10 @@
 defmodule Kozel.HTTP.Rooms do
   alias Kozel.Table.Supervisor, as: TS
 
+  require Lager
+
   def init(_transport, _req, []) do
+    IO.puts "init"
     {:upgrade, :protocol, :cowboy_rest}
   end
 
@@ -22,7 +25,8 @@ defmodule Kozel.HTTP.Rooms do
                              [{:'<', :'$2', 5}],
                              [[:'$1', :'$2']]}])
 
-    json = lc [{_, _, name}, joined] inlist tables, do: [name: name, joined: joined]
+    json = lc [{_, _, {:joined, name}}, joined] inlist tables, do: [name: name, joined: joined]
+    Lager.info "#{inspect json}"
     {:jsonx.encode(json), req, state}
   end
 

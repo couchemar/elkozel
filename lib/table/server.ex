@@ -32,7 +32,7 @@ defmodule Kozel.Table.Server do
     :random.seed(time)
     name = time |> term_to_binary |> :base16.encode
     :gproc.reg({:n, :l, {:table, name}})
-    :gproc.add_local_counter(name, 0)
+    :gproc.add_local_counter({:joined, name}, 0)
     {:ok, TableState.new(name: name)}
   end
 
@@ -116,7 +116,7 @@ defmodule Kozel.Table.Server do
   defp process_join(token, TableState[name: name,
                                       ids_by_token: ids,
                                       tokens_by_id: tokens]=state) do
-    :gproc.update_counter({:c, :l, name}, 1)
+    :gproc.update_counter({:c, :l, {:joined, name}}, 1)
 
     if ids == nil do
       id = 1
