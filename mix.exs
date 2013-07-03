@@ -30,14 +30,13 @@ defmodule Kozel.Mixfile do
       {:exreloader, git: "https://github.com/couchemar/exreloader.git"},
       {:cowboy, git: "https://github.com/extend/cowboy.git", tag: "0.8.6"},
           {:ranch, git: "https://github.com/extend/ranch.git", tag: "0.8.4"},
+      {:bullet, git: "https://github.com/extend/bullet.git"},
       {:mimetypes, git: "https://github.com/spawngrid/mimetypes.git"},
       {:jsonx, git: "https://github.com/iskra/jsonx.git"},
       {:gproc, git: "https://github.com/uwiger/gproc.git"},
       {:base16, git: "https://github.com/goj/base16.git"} ]
  end
 
-  defp options(env) when env in [:dev, :test] do
-    [ exlager_level: :debug ]
-  end
+  defp options(env) when env in [:dev, :test], do: [ exlager_level: :debug ]
   defp options(_), do: []
 end
