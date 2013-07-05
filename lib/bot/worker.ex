@@ -44,7 +44,7 @@ defmodule Kozel.Bot.Worker do
   defcast next_turn(round, {:player, player}, table),
           export: false,
           state: state do
-    {:noreply, _process_wait state, round, player, table}
+    {:noreply, _process_wait(state, round, player, table)}
   end
 
   defcast round_end(round, {:winner, winner}),
