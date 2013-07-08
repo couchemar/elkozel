@@ -24,12 +24,16 @@ defmodule Kozel.Mixfile do
   def env_applications(_), do: []
 
   defp deps do
-    [ {:genx, "0.1", git: "https://github.com/yrashk/genx.git"},
+    [ {:genx, "0.1", git: "https://github.com/yrashk/genx.git",
+                     override: true},
       {:exlager, git: "https://github.com/khia/exlager.git"},
-          {:goldrush, git: "https://github.com/DeadZen/goldrush.git", tag: "879c69874a"},
+          {:goldrush, git: "https://github.com/DeadZen/goldrush.git", tag: "879c69874a",
+                      override: true},
       {:exreloader, git: "https://github.com/couchemar/exreloader.git"},
-      {:cowboy, git: "https://github.com/extend/cowboy.git", tag: "0.8.6"},
-          {:ranch, git: "https://github.com/extend/ranch.git", tag: "0.8.4"},
+      {:cowboy, git: "https://github.com/extend/cowboy.git", tag: "0.8.6",
+                override: true},
+          {:ranch, git: "https://github.com/extend/ranch.git", tag: "0.8.4",
+                   override: true},
       {:bullet, git: "https://github.com/extend/bullet.git"},
       {:mimetypes, git: "https://github.com/spawngrid/mimetypes.git"},
       {:jsonx, git: "https://github.com/iskra/jsonx.git"},
