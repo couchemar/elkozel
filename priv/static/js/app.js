@@ -35,4 +35,25 @@ angular.module('KozelApp', ['restangular'])
             $scope.players = room.all("players").getList();
         });
     };
+
+    room.all("players").post().then(
+        function(e) {
+            console.log(e.data);
+        }
+    )
+
+/*    var bullet = $.bullet('ws://localhost:9999/bullet/game');
+
+    bullet.onopen = function() {
+        console.log('Open');
+    };
+    bullet.onclose = function() {
+        console.log('close');
+    };
+    bullet.onmessage = function(e) {
+        alert(e.data);
+    };
+    bullet.onheartbeat = function() {
+        console.log('Got ping');
+    }*/
 });

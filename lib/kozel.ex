@@ -14,7 +14,8 @@ defmodule Kozel.Supervisor do
      supervisor(Kozel.Table.Supervisor, []),
      # TODO: move to separated sup.
      worker(Kozel.Bot.Sentinel, []),
-     supervisor(Kozel.Bot.Supervisor, [])
+     supervisor(Kozel.Bot.Supervisor, []),
+     supervisor(Kozel.Player.Supervisor, [])
     ]
   end
 end
